@@ -459,7 +459,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderAnswerButtons(lang) {
     answerButtonsGrid.innerHTML = '';
-    COLOR_PALETTE.forEach((colorObj) => {
+    const shuffledPalette = shuffleArray(COLOR_PALETTE);
+    shuffledPalette.forEach((colorObj) => {
       const btnText = lang === 'ENG' ? colorObj.english : colorObj.thai;
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -493,7 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const endTime = performance.now();
     stopLiveTimer();
 
-    const currentTrial = trialList[currentTrialIndex];
+    const currentTrial = isPracticeMode ? PRACTICE_TRIALS[practiceTrialIndex] : trialList[currentTrialIndex];
     const isTimeout = selectedAnswer === 'ไม่ได้ตอบ (Timeout)';
     const reactionTimeMs = isTimeout ? (trialTimeLimitSec * 1000) : (endTime - trialStartTime);
     const reactionTimeSec = (reactionTimeMs / 1000).toFixed(3);
@@ -502,7 +503,10 @@ document.addEventListener('DOMContentLoaded', () => {
     playSound(isCorrect);
 
     if (isPracticeMode) {
-      showPracticeFeedback(isCorrect, currentTrial);
+      practiceTrialIndex++;
+      setTimeout(() => {
+        startTrial();
+      }, 450);
       return;
     }
 
@@ -528,32 +532,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 450);
   }
 
-  // Practice Mode Overlays Logic
-  function showPracticeFeedback(isCorrect, trial) {
-    if (practiceStepTag) practiceStepTag.textContent = `🎓 ข้อสอบซ้อม (ข้อ ${practiceTrialIndex + 1} / ${PRACTICE_TRIALS.length})`;
-    if (practiceResultTitle) {
-      if (isCorrect) {
-        practiceResultTitle.textContent = '🎉 ตอบถูกต้อง!';
-        practiceResultTitle.style.color = 'var(--accent-green)';
-      } else {
-        practiceResultTitle.textContent = '💡 ข้อนี้ยังไม่ถูกต้อง';
-        practiceResultTitle.style.color = 'var(--accent-amber)';
-      }
-    }
-    if (practiceExplanationText) {
-      practiceExplanationText.textContent = isCorrect ? trial.explanationCorrect : trial.explanationWrong;
-    }
-    if (modalPracticeFeedback) modalPracticeFeedback.classList.add('active');
-  }
 
-  function nextPracticeTrial() {
-    if (modalPracticeFeedback) modalPracticeFeedback.classList.remove('active');
-    practiceTrialIndex++;
-    startTrial();
-  }
 
   function finishPractice() {
-    if (modalPracticeFeedback) modalPracticeFeedback.classList.remove('active');
     if (modalPracticeComplete) modalPracticeComplete.classList.add('active');
   }
 
