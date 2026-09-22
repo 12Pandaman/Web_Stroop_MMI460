@@ -1,0 +1,2 @@
+﻿word,color,corrAns,thisN,thisTrialN,thisRepN,trials.thisRepN,trials.thisTrialN,trials.thisN,trials.thisIndex,thisRow.t,notes,piloting,trial.started,stroop_text.started,btn_red.started,btn_blue.started,mouse.started,mouse.stopped,participant,session,date,expName,expVersion,psychopyVersion,frameRate,expStart,
+red,blue,btn_blue,0,0,0,0,0,0,3,0.036708800005726516,,False,0.03200720000313595,0.036708800005726516,0.036708800005726516,0.036708800005726516,0.03202300000702962,1.0198870000021998,,,,,,,,,

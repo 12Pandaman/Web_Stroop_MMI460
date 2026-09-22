@@ -1,0 +1,18 @@
+3.0894 	INFO 	Loaded monitor calibration from ['2026_09_21 18:51']
+3.0932 	WARNING 	User requested fullscreen with size [1024  768], but screen is actually [2560, 1600]. Using actual size
+3.2551 	INFO 	Using renderer 'Intel(R) RaptorLake-S Mobile Graphics Controller' for graphics
+3.2551 	INFO 	OpenGL version supported by driver is 4..
+3.2870 	EXP 	Created window1 = Window(allowGUI=False, allowStencil=True, autoLog=True, backendConf=UNKNOWN, backgroundFit=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000019C908AA450>, backgroundImage=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000019C9089FB90>, bitsMode=UNKNOWN, blendMode='avg', bpc=(8, 8, 8), color=array([0, 0, 0]), colorSpace='rgb', depthBits=8, fullscr=True, gamma=None, gammaErrorPolicy='raise', infoMsg=UNKNOWN, lms=UNKNOWN, monitor=<psychopy.monitors.calibTools.Monitor object at 0x0000019C90989110>, multiSample=False, name='window1', numSamples=2, pos=[np.float64(0.0), np.float64(0.0)], screen=0, size=array([2560, 1600]), stencilBits=8, stereo=False, title='PsychoPy', units='height', useFBO=True, useRetina=False, viewOri=0.0, viewPos=None, viewScale=None, waitBlanking=True, winType='pyglet')
+3.2870 	EXP 	window1: backgroundImage = ''
+3.2870 	EXP 	window1: backgroundFit = 'none'
+3.5458 	EXP 	window1: Attempting to measure frame rate of screen (0) ...
+3.5458 	EXP 	window1: recordFrameIntervals = False
+3.6021 	EXP 	window1: recordFrameIntervals = True
+4.1577 	EXP 	window1: recordFrameIntervals = False
+4.1577 	EXP 	Screen (0) actual frame rate measured at 180.18Hz
+4.5530 	INFO 	keyboard.Keyboard is using ptb backend.
+4.5530 	EXP 	StroopTask: status = STARTED
+0.0079 	EXP 	StroopTask: status = STOPPED
+0.0096 	INFO 	saved data to 'C:\\Users\\User\\Downloads\\data\\543305_StroopTask_2026-09-21_20h36.24.821.csv'
+0.0100 	INFO 	saved data to C:\Users\User\Downloads\data\543305_StroopTask_2026-09-21_20h36.24.821.psydat
+0.2997 	INFO 	Stopping keyboard key buffers.

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stroop Color & Word Test - แบบทดสอบสตรูปการรับรู้สีและคำ (4 เงื่อนไข)</title>
+  <!-- Google Fonts: Inter, Outfit & Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kanit:wght@300;400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap"
+    rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="app-background">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <main class="app-container">
+    <!-- Top Navigation Header -->
+    <header class="main-header">
+      <div class="brand">
+        <div class="brand-icon"><i class="fa-solid fa-brain"></i></div>
+        <div class="brand-text">
+          <h1>Stroop Test <span>Pro 4-Modes</span></h1>
+          <p>แบบทดสอบวัดปฏิกิริยาการรับรู้สีและคำ (4 เงื่อนไขการทดสอบ)</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="theme-dropdown-container">
+          <button id="btn-theme-toggle" class="icon-btn" title="เปลี่ยนธีมสีเว็บไซต์">
+            <i class="fa-solid fa-palette"></i>
+          </button>
+          <div id="theme-menu" class="theme-menu">
+            <div class="theme-menu-title"><i class="fa-solid fa-paint-roller"></i> เลือกธีมสี (Theme)</div>
+            <button class="theme-opt active" data-theme="dark"><span class="theme-dot dark"></span> Midnight Dark (มืดปกติ)</button>
+            <button class="theme-opt" data-theme="light"><span class="theme-dot light"></span> Clean Light (สว่างสดใส)</button>
+            <button class="theme-opt" data-theme="oled"><span class="theme-dot oled"></span> Pure OLED Black (มืดสนิท)</button>
+            <button class="theme-opt" data-theme="emerald"><span class="theme-dot emerald"></span> Emerald Mint (เขียวมินต์)</button>
+          </div>
+        </div>
+        <button id="btn-sound-toggle" class="icon-btn" title="เปิด/ปิด เสียงเอฟเฟกต์">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+        <button id="btn-history" class="glass-btn secondary sm">
+          <i class="fa-solid fa-list-check"></i> ประวัติผู้ทดสอบ (<span id="history-count">0</span>)
+        </button>
+      </div>
+    </header>
+
+    <!-- SECTION 1: START / INSTRUCTIONS SCREEN -->
+    <section id="screen-start" class="screen active">
+      <div class="glass-card main-card welcome-card">
+        <div class="card-badge"><i class="fa-solid fa-layer-group"></i> 4 Experimental Conditions Mode</div>
+        <h2>คำชี้แจงการทำแบบทดสอบ Stroop (4 เงื่อนไข)</h2>
+        <p class="subtitle">หลักการตอบ: ให้เลือกกดปุ่ม <strong>"หมึกตัวอักษร"</strong> (ไม่ใช่ความหมายของคำ)
+          ให้เร็วและถูกต้องที่สุด</p>
+
+        <!-- 4 Conditions Accordion / Preview Cards -->
+        <div class="conditions-preview-grid">
+          <div class="cond-card cond-1">
+            <div class="cond-num">เงื่อนไข 1</div>
+            <div class="cond-title">Thai ➔ Eng (Congruent)</div>
+            <div class="cond-desc">เห็นคำไทย (หมึกตรงคำ) ➔ ตอบปุ่ม <strong>ภาษาอังกฤษ</strong></div>
+            <div class="cond-demo"><span style="color: #ef4444;">แดง</span> ➔ <span class="badge-tag red">RED</span>
+            </div>
+          </div>
+
+          <div class="cond-card cond-2">
+            <div class="cond-num">เงื่อนไข 2</div>
+            <div class="cond-title">Thai ➔ Eng (Incongruent)</div>
+            <div class="cond-desc">เห็นคำไทย (หมึกไม่ตรงคำ) ➔ ตอบปุ่ม <strong>ภาษาอังกฤษ</strong></div>
+            <div class="cond-demo"><span style="color: #3b82f6;">แดง</span> ➔ <span class="badge-tag blue">BLUE</span>
+            </div>
+          </div>
+
+          <div class="cond-card cond-3">
+            <div class="cond-num">เงื่อนไข 3</div>
+            <div class="cond-title">Eng ➔ Thai (Congruent)</div>
+            <div class="cond-desc">เห็นคำอังกฤษ (หมึกตรงคำ) ➔ ตอบปุ่ม <strong>ภาษาไทย</strong></div>
+            <div class="cond-demo"><span style="color: #10b981;">GREEN</span> ➔ <span
+                class="badge-tag green">เขียว</span></div>
+          </div>
+
+          <div class="cond-card cond-4">
+            <div class="cond-num">เงื่อนไข 4</div>
+            <div class="cond-title">Eng ➔ Thai (Incongruent)</div>
+            <div class="cond-desc">เห็นคำอังกฤษ (หมึกไม่ตรงคำ) ➔ ตอบปุ่ม <strong>ภาษาไทย</strong></div>
+            <div class="cond-demo"><span style="color: #eab308;">GREEN</span> ➔ <span
+                class="badge-tag yellow">เหลือง</span></div>
+          </div>
+        </div>
+
+        <form id="form-start-test" class="setup-form">
+          <div class="form-grid">
+            <div class="input-group">
+              <label for="participant-name"><i class="fa-solid fa-user"></i> ชื่อผู้ทดสอบ / รหัสประจำตัว</label>
+              <input type="text" id="participant-name" placeholder="กรอกชื่อ หรือ Participant ID" required
+                autocomplete="off" value="ผู้ทดสอบ #1">
+            </div>
+            <div class="input-group">
+              <label for="trial-count-select"><i class="fa-solid fa-list-ol"></i> จำนวนข้อในการทดสอบ</label>
+              <select id="trial-count-select">
+                <option value="15" selected>15 ข้อ (แนะนำ)</option>
+                <option value="20">20 ข้อ</option>
+                <option value="30">30 ข้อ</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="input-group">
+              <label for="condition-mode-select"><i class="fa-solid fa-sliders"></i> เลือกโหมดเงื่อนไขการทดสอบ</label>
+              <select id="condition-mode-select" class="mode-select">
+                <option value="ALL_MIXED" selected>🔀 สุ่มคละทั้ง 4 เงื่อนไข (All 4 Conditions Mixed)</option>
+                <option value="C1">เงื่อนไข 1: เห็นคำไทย ➔ ตอบภาษาอังกฤษ (หมึกตรงคำ / Congruent)</option>
+                <option value="C2">เงื่อนไข 2: เห็นคำไทย ➔ ตอบภาษาอังกฤษ (หมึกไม่ตรงคำ / Incongruent)</option>
+                <option value="C3">เงื่อนไข 3: เห็นคำอังกฤษ ➔ ตอบภาษาไทย (หมึกตรงคำ / Congruent)</option>
+                <option value="C4">เงื่อนไข 4: เห็นคำอังกฤษ ➔ ตอบภาษาไทย (หมึกไม่ตรงคำ / Incongruent)</option>
+              </select>
+            </div>
+
+            <div class="input-group">
+              <label for="time-limit-select"><i class="fa-solid fa-clock"></i> จำกัดเวลาตอบต่อข้อ (Time Limit)</label>
+              <select id="time-limit-select">
+                <option value="4" selected>4.0 วินาที (แนะนำมาตรฐานวิจัย)</option>
+                <option value="3">3.0 วินาที (เข้มงวด - Fast Pace)</option>
+                <option value="5">5.0 วินาที (ผ่อนคลาย - Relaxed)</option>
+                <option value="0">ไม่จำกัดเวลา (Unlimited)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="stimulus-duration-select"><i class="fa-solid fa-hourglass-start"></i> ลำดับแสดงผล: คำโจทย์ขึ้นก่อน ➔ ช้อยส์ค่อยขึ้น (โจทย์ค้างอยู่ตลอด)</label>
+            <select id="stimulus-duration-select">
+              <option value="0.5" selected>แสดงคำโจทย์ก่อน 0.5 วินาที แล้วช้อยส์ค่อยขึ้น (โจทย์ไม่ดับ)</option>
+              <option value="1.0">แสดงคำโจทย์ก่อน 1.0 วินาที แล้วช้อยส์ค่อยขึ้น (โจทย์ไม่ดับ)</option>
+              <option value="1.5">แสดงคำโจทย์ก่อน 1.5 วินาที แล้วช้อยส์ค่อยขึ้น (โจทย์ไม่ดับ)</option>
+              <option value="always">แสดงคำโจทย์และช้อยส์ขึ้นพร้อมกันทันที</option>
+            </select>
+          </div>
+
+          <div class="start-btn-group">
+            <button type="button" id="btn-start-practice" class="glass-btn secondary lg">
+              <i class="fa-solid fa-graduation-cap"></i> 🎓 ทดลองซ้อมทำ (4 ข้อซ้อม)
+            </button>
+            <button type="submit" id="btn-start-game" class="glass-btn primary lg">
+              <i class="fa-solid fa-rocket"></i> 🚀 เริ่มการทดสอบจริง
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- SECTION 2: TEST ARENA SCREEN -->
+    <section id="screen-test" class="screen">
+
+      <!-- Practice Mode Banner -->
+      <div id="practice-hud-banner" class="practice-hud-banner" style="display: none;">
+        <i class="fa-solid fa-graduation-cap"></i> <strong>โหมดทดลองซ้อมทำ:</strong> ข้อที่ <span id="practice-trial-num">1</span> / 4 (ข้อสอบซ้อม ไม่คิดคะแนนจริง)
+      </div>
+
+      <!-- Stimulus Box -->
+      <div class="stimulus-container glass-card">
+        <div id="stimulus-display" class="stimulus-text">READY</div>
+        <div id="feedback-indicator" class="feedback-indicator"></div>
+      </div>
+
+      <!-- Answer Buttons Grid -->
+      <div class="answers-grid-container">
+        <div id="answer-buttons-grid" class="answers-grid">
+          <!-- Buttons dynamically created in app.js depending on condition -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: RESULTS DASHBOARD SCREEN -->
+    <section id="screen-results" class="screen">
+      <div class="glass-card results-card">
+        <div class="results-header">
+          <div class="results-title-group">
+            <span class="badge-tag success"><i class="fa-solid fa-circle-check"></i> การทดสอบเสร็จสมบูรณ์</span>
+            <h2>ผลการทดสอบ Stroop Test (4 เงื่อนไข)</h2>
+            <p>ผู้ทดสอบ: <strong id="res-participant-name">--</strong> | วันที่: <span id="res-date-time">--</span> |
+              โหมด: <span id="res-mode-name" class="highlight">--</span></p>
+          </div>
+          <div class="results-actions">
+            <button id="btn-export-csv" class="glass-btn secondary sm"><i class="fa-solid fa-file-csv"></i> ส่งออก
+              CSV</button>
+            <button id="btn-export-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> ส่งออก
+              JSON</button>
+            <button id="btn-restart" class="glass-btn primary sm"><i class="fa-solid fa-rotate-left"></i>
+              ทดสอบใหม่</button>
+          </div>
+        </div>
+
+        <!-- Key Metrics Cards -->
+        <div class="metrics-grid">
+          <!-- Metric 1: Accuracy -->
+          <div class="metric-card glass-card accent-purple">
+            <div class="metric-icon"><i class="fa-solid fa-bullseye"></i></div>
+            <div class="metric-info">
+              <span class="metric-label">ความถูกต้องรวม (Overall Accuracy)</span>
+              <div id="res-accuracy-pct" class="metric-value">0.0%</div>
+              <span id="res-accuracy-count" class="metric-sub">ตอบถูก 0 จาก 15 ข้อ</span>
+            </div>
+          </div>
+
+          <!-- Metric 2: Average Reaction Time for All Responses -->
+          <div class="metric-card glass-card accent-blue">
+            <div class="metric-icon"><i class="fa-solid fa-stopwatch-20"></i></div>
+            <div class="metric-info">
+              <span class="metric-label">เวลาเฉลี่ยรวมทุกข้อ (Avg. Reaction Time)</span>
+              <div id="res-avg-correct-rt-sec" class="metric-value highlight">0.000 s</div>
+              <span id="res-avg-correct-rt-ms" class="metric-sub">(0 ms)</span>
+            </div>
+          </div>
+
+          <!-- Metric 3: Fastest & Slowest Response -->
+          <div class="metric-card glass-card accent-green">
+            <div class="metric-icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <div class="metric-info">
+              <span class="metric-label">เวลาตอบ เร็วที่สุด / ช้าที่สุด</span>
+              <div id="res-fastest-rt" class="metric-value font-sm">เร็วสุด: 0.000 s</div>
+              <span id="res-slowest-rt" class="metric-sub">ช้าสุด: 0.000 s</span>
+            </div>
+          </div>
+
+          <!-- Metric 4: Stroop Interference Effect -->
+          <div class="metric-card glass-card accent-amber">
+            <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="metric-info">
+              <span class="metric-label">ผลกระทบสตรูป (Stroop Effect)</span>
+              <div id="res-stroop-effect" class="metric-value font-sm">+0.000 s</div>
+              <span id="res-stroop-detail" class="metric-sub">Incongruent vs Congruent</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Conditions Breakdown Table -->
+        <div class="analysis-box glass-card">
+          <h3><i class="fa-solid fa-table-columns"></i> สรุปผลแยกตาม 4 เงื่อนไข (เวลาเฉลี่ยรวมทุกข้อ)</h3>
+          <div class="stats-table-wrapper">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>เงื่อนไข (Condition)</th>
+                  <th>คำศัพท์ ➔ ตอบ</th>
+                  <th>ความตรงของสี</th>
+                  <th>ตอบถูก/ทั้งหมด</th>
+                  <th>เวลาเฉลี่ย (วินาที)</th>
+                  <th>เวลาเฉลี่ย (ms)</th>
+                </tr>
+              </thead>
+              <tbody id="cond-table-body">
+                <!-- Dynamically populated in app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Trial Breakdown Log Table -->
+        <div class="trials-log-section">
+          <div class="section-title-row">
+            <h3><i class="fa-solid fa-table-list"></i> รายละเอียดบันทึกการกดแต่ละข้อ (15 ข้อ)</h3>
+            <span class="hint-text">*คลิกที่หัวข้อคอลัมน์เพื่อดูข้อมูลย่อยได้</span>
+          </div>
+          <div class="table-container">
+            <table class="trials-table">
+              <thead>
+                <tr>
+                  <th>ข้อที่</th>
+                  <th>เงื่อนไข</th>
+                  <th>คำโจทย์ (Prompt)</th>
+                  <th>สีหมึก (Ink Color)</th>
+                  <th>คำตอบผู้ใช้</th>
+                  <th>สถานะ</th>
+                  <th>เวลาตอบ (วินาที)</th>
+                  <th>เวลาตอบ (ms)</th>
+                </tr>
+              </thead>
+              <tbody id="trials-table-body">
+                <!-- Dynamically populated in app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: PARTICIPANT HISTORY & LEADERBOARD -->
+  <div id="modal-history" class="modal">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <h2><i class="fa-solid fa-users"></i> ประวัติผลการทดสอบของผู้ทดสอบแต่ละคน</h2>
+        <button id="btn-close-modal" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Master Combined Export Bar -->
+        <div class="master-export-card">
+          <div class="master-export-info">
+            <h4><i class="fa-solid fa-database"></i> ส่งออกข้อมูลผู้ทดสอบทุกคนรวมเป็นไฟล์เดียว (Master Export)</h4>
+            <p>รวมบันทึกข้อต่อข้อของผู้ทดสอบทุกคนในระบบเป็นไฟล์เดียว นำไปวิเคราะห์ใน Excel / SPSS ได้ทันที</p>
+          </div>
+          <div class="master-export-btns">
+            <button id="btn-export-all-csv" class="glass-btn primary sm"><i class="fa-solid fa-file-csv"></i> โหลด CSV รวมทุกคน (1 ไฟล์)</button>
+            <button id="btn-export-all-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> โหลด JSON รวมทุกคน (1 ไฟล์)</button>
+          </div>
+        </div>
+
+        <div class="table-container history-table-container">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>วันที่ / เวลา</th>
+                <th>ชื่อผู้ทดสอบ</th>
+                <th>โหมดเงื่อนไข</th>
+                <th>ตอบถูก (%)</th>
+                <th>เวลาเฉลี่ยรวม</th>
+                <th>จัดการข้อมูล / ดาวน์โหลดรายบุคคล</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <!-- Dynamically populated in app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-clear-history" class="glass-btn danger sm"><i class="fa-solid fa-trash-can"></i>
+          ลบประวัติทั้งหมด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRACTICE / TUTORIAL OVERLAY -->
+  <div id="modal-practice-feedback" class="modal">
+    <div class="modal-content glass-card practice-card">
+      <div class="practice-header">
+        <span id="practice-step-tag" class="badge-tag primary">🎓 ข้อสอบซ้อม (ข้อ 1 / 4)</span>
+        <h3 id="practice-result-title">ผลการตอบข้อซ้อม</h3>
+      </div>
+      <div class="practice-body">
+        <p id="practice-explanation-text">คำอธิบาย</p>
+      </div>
+      <div class="practice-footer">
+        <button id="btn-next-practice" class="glass-btn primary lg">ข้อซ้อมถัดไป <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PRACTICE COMPLETE -->
+  <div id="modal-practice-complete" class="modal">
+    <div class="modal-content glass-card practice-card text-center">
+      <div class="practice-complete-content">
+        <div class="complete-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <h2>ซ้อมทำครบ 4 ข้อเรียบร้อยแล้ว!</h2>
+        <p>คุณเข้าใจหลักการตอบแบบทดสอบ Stroop Test (เน้นหมึกตัวอักษร) เรียบร้อยแล้ว พร้อมที่จะเริ่มการทดสอบจริงแล้วหรือยัง?</p>
+        <div class="practice-complete-actions">
+          <button id="btn-start-real-from-practice" class="glass-btn primary lg"><i class="fa-solid fa-rocket"></i> 🚀 เริ่มการทดสอบจริงทันที</button>
+          <button id="btn-restart-practice" class="glass-btn secondary md"><i class="fa-solid fa-rotate-left"></i> ลองซ้อมทำอีกครั้ง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

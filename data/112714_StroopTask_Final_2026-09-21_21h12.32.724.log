@@ -1,0 +1,38 @@
+2.8011 	INFO 	Loaded monitor calibration from ['2026_09_21 18:51']
+2.8043 	WARNING 	User requested fullscreen with size [1024  768], but screen is actually [2560, 1600]. Using actual size
+2.9735 	INFO 	Using renderer 'Intel(R) RaptorLake-S Mobile Graphics Controller' for graphics
+2.9735 	INFO 	OpenGL version supported by driver is 4..
+3.0018 	EXP 	Created window1 = Window(allowGUI=True, allowStencil=True, autoLog=True, backendConf=UNKNOWN, backgroundFit=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000019A8C2C6090>, backgroundImage=<method-wrapper '__getattribute__' of attributeSetter object at 0x0000019A8C2C66D0>, bitsMode=UNKNOWN, blendMode='avg', bpc=(8, 8, 8), color=array([0, 0, 0]), colorSpace='rgb', depthBits=8, fullscr=True, gamma=None, gammaErrorPolicy='raise', infoMsg=UNKNOWN, lms=UNKNOWN, monitor=<psychopy.monitors.calibTools.Monitor object at 0x0000019A8C39EC90>, multiSample=False, name='window1', numSamples=2, pos=[np.float64(0.0), np.float64(0.0)], screen=0, size=array([2560, 1600]), stencilBits=8, stereo=False, title='PsychoPy', units='height', useFBO=True, useRetina=False, viewOri=0.0, viewPos=None, viewScale=None, waitBlanking=True, winType='pyglet')
+3.0018 	EXP 	window1: backgroundImage = ''
+3.0018 	EXP 	window1: backgroundFit = 'none'
+3.2535 	EXP 	window1: Attempting to measure frame rate of screen (0) ...
+3.2535 	EXP 	window1: recordFrameIntervals = False
+3.3083 	EXP 	window1: recordFrameIntervals = True
+3.8635 	EXP 	window1: recordFrameIntervals = False
+3.8636 	EXP 	Screen (0) actual frame rate measured at 180.42Hz
+4.2654 	INFO 	keyboard.Keyboard is using ptb backend.
+4.2654 	EXP 	StroopTask_Final: status = STARTED
+4.2723 	EXP 	Created stroop_text = TextStim(__class__=<class 'psychopy.visual.text.TextStim'>, alignHoriz=method-wrapper(...), alignText='center', alignVert=method-wrapper(...), anchorHoriz='center', anchorVert='center', antialias=True, autoDraw=False, autoLog=True, bold=False, color=array([1., 1., 1.]), colorSpace='rgb', contrast=1.0, depth=0.0, draggable=False, flipHoriz=False, flipVert=False, font='Arial', fontFiles=[], height=0.05, italic=False, languageStyle='LTR', name='stroop_text', opacity=1, ori=0.0, pos=array([0., 0.]), rgb=UNKNOWN, text='', units='height', win=Window(...), wrapWidth=1)
+0.0104 	EXP 	btn_red: autoLog = True
+0.0104 	EXP 	btn_blue: autoLog = True
+0.0139 	EXP 	Imported conditions.xlsx as conditions, 4 conditions, 3 params
+0.0142 	EXP 	New trial (rep=0, index=0): <Trial 0 (0 in rep 0) data={'word': 'red', 'color': 'red', 'corrAns': 'btn_red', 'thisN': 0, 'thisTrialN': 0, 'thisRepN': 0}>
+0.0365 	EXP 	stroop_text: foreColor = <psychopy.colors.Color: red, alpha=1.0>
+0.0365 	EXP 	stroop_text: height = np.float64(0.05)
+0.0365 	EXP 	stroop_text: height = np.float64(0.05)
+0.0365 	EXP 	stroop_text: height = np.float64(0.05)
+0.0365 	EXP 	stroop_text: text = 'red'
+0.0365 	EXP 	stroop_text: autoDraw = True
+0.0365 	EXP 	btn_red: autoDraw = True
+0.0365 	EXP 	btn_blue: autoDraw = True
+2.8256 	DATA 	Keypress: escape
+2.8318 	EXP 	Device response: <KeyPress from None: t=2.824722200020915, value=escape, duration=None>
+2.9681 	EXP 	Device response: <KeyPress from None: t=2.824722200020915, value=escape, duration=0.1379212999891024>
+2.9682 	EXP 	StroopTask_Final: status = STOPPED
+2.9723 	EXP 	stroop_text: autoDraw = False
+2.9723 	EXP 	btn_red: autoDraw = False
+2.9723 	EXP 	btn_blue: autoDraw = False
+2.9724 	EXP 	StroopTask_Final: status = STOPPED
+2.9750 	INFO 	saved data to 'C:\\Users\\User\\Downloads\\test stroop\\data\\112714_StroopTask_Final_2026-09-21_21h12.32.724.csv'
+2.9755 	INFO 	saved data to C:\Users\User\Downloads\test stroop\data\112714_StroopTask_Final_2026-09-21_21h12.32.724.psydat
+3.2115 	INFO 	Stopping keyboard key buffers.
