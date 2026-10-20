@@ -459,8 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderAnswerButtons(lang) {
     answerButtonsGrid.innerHTML = '';
-    const shuffledPalette = shuffleArray(COLOR_PALETTE);
-    shuffledPalette.forEach((colorObj) => {
+    COLOR_PALETTE.forEach((colorObj) => {
       const btnText = lang === 'ENG' ? colorObj.english : colorObj.thai;
       const btn = document.createElement('button');
       btn.type = 'button';
