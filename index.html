@@ -101,16 +101,15 @@
         <form id="form-start-test" class="setup-form">
           <div class="form-grid">
             <div class="input-group">
-              <label for="participant-name"><i class="fa-solid fa-user"></i> ชื่อผู้ทดสอบ / รหัสประจำตัว</label>
-              <input type="text" id="participant-name" placeholder="กรอกชื่อ หรือ Participant ID" required
-                autocomplete="off" value="ผู้ทดสอบ #1">
+              <label for="participant-name"><i class="fa-solid fa-user"></i> รหัสผู้ทดสอบ / Participant ID</label>
+              <input type="text" id="participant-name" placeholder="กรอกรหัส เช่น P01, P02 หรือชื่อ" required
+                autocomplete="off" value="P01">
             </div>
             <div class="input-group">
-              <label for="trial-count-select"><i class="fa-solid fa-list-ol"></i> จำนวนข้อในการทดสอบ</label>
-              <select id="trial-count-select">
-                <option value="15" selected>15 ข้อ (แนะนำ)</option>
-                <option value="20">20 ข้อ</option>
-                <option value="30">30 ข้อ</option>
+              <label for="test-session-select"><i class="fa-solid fa-clipboard-check"></i> รอบการทดสอบ (Test Phase)</label>
+              <select id="test-session-select" class="session-select">
+                <option value="PRE" selected>🔵 Pre-test (ก่อนการทดลอง)</option>
+                <option value="POST">🟢 Post-test (หลังการทดลอง)</option>
               </select>
             </div>
           </div>
@@ -128,16 +127,25 @@
             </div>
 
             <div class="input-group">
-              <label for="time-limit-select"><i class="fa-solid fa-clock"></i> จำกัดเวลาตอบต่อข้อ (Time Limit)</label>
-              <select id="time-limit-select">
-                <option value="4" selected>4.0 วินาที (แนะนำมาตรฐานวิจัย)</option>
-                <option value="3">3.0 วินาที (เข้มงวด - Fast Pace)</option>
-                <option value="5">5.0 วินาที (ผ่อนคลาย - Relaxed)</option>
-                <option value="1">1.0 วินาที (เร็วมาก - Very Fast)</option>
-                <option value="0.5">0.5 วินาที (เร็วสุด - Ultra Fast)</option>
-                <option value="0">ไม่จำกัดเวลา (Unlimited)</option>
+              <label for="trial-count-select"><i class="fa-solid fa-list-ol"></i> จำนวนข้อในการทดสอบ</label>
+              <select id="trial-count-select">
+                <option value="15" selected>15 ข้อ (แนะนำ)</option>
+                <option value="20">20 ข้อ</option>
+                <option value="30">30 ข้อ</option>
               </select>
             </div>
+          </div>
+
+          <div class="input-group">
+            <label for="time-limit-select"><i class="fa-solid fa-clock"></i> จำกัดเวลาตอบต่อข้อ (Time Limit)</label>
+            <select id="time-limit-select">
+              <option value="4" selected>4.0 วินาที (แนะนำมาตรฐานวิจัย)</option>
+              <option value="3">3.0 วินาที (เข้มงวด - Fast Pace)</option>
+              <option value="5">5.0 วินาที (ผ่อนคลาย - Relaxed)</option>
+              <option value="1">1.0 วินาที (เร็วมาก - Very Fast)</option>
+              <option value="0.5">0.5 วินาที (เร็วสุด - Ultra Fast)</option>
+              <option value="0">ไม่จำกัดเวลา (Unlimited)</option>
+            </select>
           </div>
 
           <div class="input-group">
@@ -189,18 +197,23 @@
       <div class="glass-card results-card">
         <div class="results-header">
           <div class="results-title-group">
-            <span class="badge-tag success"><i class="fa-solid fa-circle-check"></i> การทดสอบเสร็จสมบูรณ์</span>
-            <h2>ผลการทดสอบ Stroop Test (4 เงื่อนไข)</h2>
-            <p>ผู้ทดสอบ: <strong id="res-participant-name">--</strong> | วันที่: <span id="res-date-time">--</span> |
-              โหมด: <span id="res-mode-name" class="highlight">--</span></p>
+            <div class="results-badge-row">
+              <span class="badge-tag success"><i class="fa-solid fa-circle-check"></i> การทดสอบเสร็จสมบูรณ์</span>
+              <span id="res-session-badge" class="badge-tag session-pre">🔵 Pre-test</span>
+            </div>
+            <h2>ผลการทดสอบ Stroop Test</h2>
+            <p>ผู้เข้าร่วม: <strong id="res-participant-name">--</strong> | รอบการทดสอบ: <span id="res-session-name" class="highlight">--</span> | วันที่: <span id="res-date-time">--</span> | โหมด: <span id="res-mode-name">--</span></p>
           </div>
           <div class="results-actions">
-            <button id="btn-export-csv" class="glass-btn secondary sm"><i class="fa-solid fa-file-csv"></i> ส่งออก
-              CSV</button>
-            <button id="btn-export-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> ส่งออก
-              JSON</button>
-            <button id="btn-restart" class="glass-btn primary sm"><i class="fa-solid fa-rotate-left"></i>
-              ทดสอบใหม่</button>
+            <button id="btn-export-research-csv" class="glass-btn primary sm" title="ส่งออกตารางสรุป Congruent / Incongruent เป็นไฟล์ Sheet (CSV)">
+              <i class="fa-solid fa-file-excel"></i> ดาวน์โหลด Sheet สรุปผลวิจัย
+            </button>
+            <button id="btn-copy-research-table" class="glass-btn secondary sm" title="คัดลอกตารางสรุป Congruent / Incongruent ไปวางใน Google Sheets (Ctrl+V)">
+              <i class="fa-solid fa-copy"></i> คัดลอกลง Sheet
+            </button>
+            <button id="btn-export-csv" class="glass-btn secondary sm" title="ส่งออกข้อมูลละเอียดรายข้อ (Raw Data)"><i class="fa-solid fa-file-csv"></i> CSV รายข้อ</button>
+            <button id="btn-export-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> JSON</button>
+            <button id="btn-restart" class="glass-btn primary sm"><i class="fa-solid fa-rotate-left"></i> ทดสอบใหม่</button>
           </div>
         </div>
 
@@ -299,47 +312,122 @@
     </section>
   </main>
 
-  <!-- MODAL: PARTICIPANT HISTORY & LEADERBOARD -->
+  <!-- MODAL: PARTICIPANT HISTORY & PRE/POST RESEARCH TABLE -->
   <div id="modal-history" class="modal">
-    <div class="modal-content glass-card">
+    <div class="modal-content glass-card modal-lg">
       <div class="modal-header">
-        <h2><i class="fa-solid fa-users"></i> ประวัติผลการทดสอบของผู้ทดสอบแต่ละคน</h2>
+        <div>
+          <h2><i class="fa-solid fa-users"></i> สรุปผลการวิจัยและประวัติผู้ทดสอบ</h2>
+          <p class="modal-subtitle">รวบรวมข้อมูล Pre-test & Post-test พร้อมส่งออกไปยัง Google Sheets / Excel</p>
+        </div>
         <button id="btn-close-modal" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
       </div>
+
+      <!-- Tab Switcher between Master Pre/Post Research Table and Individual Sessions -->
+      <div class="modal-tabs">
+        <button id="tab-btn-master" class="tab-btn active"><i class="fa-solid fa-table-columns"></i> ตารางสรุป Pre vs Post รวมทุกคน (สำหรับ Google Sheets)</button>
+        <button id="tab-btn-sessions" class="tab-btn"><i class="fa-solid fa-list-check"></i> รายการบันทึกการทดสอบทั้งหมด (<span id="history-modal-count">0</span>)</button>
+      </div>
+
       <div class="modal-body">
-        <!-- Master Combined Export Bar -->
-        <div class="master-export-card">
-          <div class="master-export-info">
-            <h4><i class="fa-solid fa-database"></i> ส่งออกข้อมูลผู้ทดสอบทุกคนรวมเป็นไฟล์เดียว (Master Export)</h4>
-            <p>รวมบันทึกข้อต่อข้อของผู้ทดสอบทุกคนในระบบเป็นไฟล์เดียว นำไปวิเคราะห์ใน Excel / SPSS ได้ทันที</p>
+        <!-- TAB 1: MASTER PRE/POST SUMMARY TABLE -->
+        <div id="tab-pane-master" class="tab-pane active">
+          <div class="master-export-card">
+            <div class="master-export-info">
+              <h4><i class="fa-solid fa-clipboard-check"></i> ตารางเปรียบเทียบ Pre-test และ Post-test รวมผู้เข้าร่วมทุกคน</h4>
+              <p>ผู้เข้าร่วม | Pre [C, I, D] | Post [C, I, D] | ผลต่าง Post - Pre (เฉพาะข้อที่ตอบถูก)</p>
+            </div>
+            <div class="master-export-btns">
+              <button id="btn-copy-master-table" class="glass-btn primary sm"><i class="fa-solid fa-copy"></i> คัดลอกตารางไปวางใน Google Sheets (Ctrl+V)</button>
+              <button id="btn-export-master-summary-csv" class="glass-btn secondary sm"><i class="fa-solid fa-file-csv"></i> ดาวน์โหลด CSV สรุปผลวิจัย</button>
+            </div>
           </div>
-          <div class="master-export-btns">
-            <button id="btn-export-all-csv" class="glass-btn primary sm"><i class="fa-solid fa-file-csv"></i> โหลด CSV รวมทุกคน (1 ไฟล์)</button>
-            <button id="btn-export-all-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> โหลด JSON รวมทุกคน (1 ไฟล์)</button>
+
+          <div class="table-container master-table-container">
+            <table class="master-research-table">
+              <thead>
+                <tr>
+                  <th rowspan="2">ผู้เข้าร่วม</th>
+                  <th colspan="3" class="th-group th-pre">Pre-test (ก่อนการทดลอง)</th>
+                  <th colspan="3" class="th-group th-post">Post-test (หลังการทดลอง)</th>
+                  <th rowspan="2">ผลต่าง $\Delta D$<br><small>(Post - Pre)</small></th>
+                  <th rowspan="2">การเปลี่ยนแปลง</th>
+                </tr>
+                <tr>
+                  <th class="th-sub">Congruent</th>
+                  <th class="th-sub">Incongruent</th>
+                  <th class="th-sub">ผลต่าง $D_{pre}$</th>
+                  <th class="th-sub">Congruent</th>
+                  <th class="th-sub">Incongruent</th>
+                  <th class="th-sub">ผลต่าง $D_{post}$</th>
+                </tr>
+              </thead>
+              <tbody id="master-research-table-body">
+                <!-- Dynamically populated in app.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Formula Helper Accordion -->
+          <div class="sheet-formula-guide">
+            <div class="guide-header">
+              <i class="fa-solid fa-lightbulb" style="color: #facc15;"></i>
+              <strong>คำแนะนำสูตร Google Sheets (กรณีนำไฟล์ CSV ข้อต่อข้อไปวางในชีต):</strong>
+            </div>
+            <div class="formula-chips">
+              <div class="formula-item">
+                <span class="formula-lbl">สูตรหา Congruent (ms) เฉพาะข้อที่ตอบถูก:</span>
+                <code>=ROUND(AVERAGEIFS(I7:I21, J7:J21, "Yes", G7:G21, "Correct"), 0)</code>
+              </div>
+              <div class="formula-item">
+                <span class="formula-lbl">สูตรหา Incongruent (ms) เฉพาะข้อที่ตอบถูก:</span>
+                <code>=ROUND(AVERAGEIFS(I7:I21, J7:J21, "No", G7:G21, "Correct"), 0)</code>
+              </div>
+              <div class="formula-item">
+                <span class="formula-lbl">สูตรหาผลต่าง D = I - C:</span>
+                <code>=Cell_Incongruent - Cell_Congruent</code>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="table-container history-table-container">
-          <table class="history-table">
-            <thead>
-              <tr>
-                <th>วันที่ / เวลา</th>
-                <th>ชื่อผู้ทดสอบ</th>
-                <th>โหมดเงื่อนไข</th>
-                <th>ตอบถูก (%)</th>
-                <th>เวลาเฉลี่ยรวม</th>
-                <th>จัดการข้อมูล / ดาวน์โหลดรายบุคคล</th>
-              </tr>
-            </thead>
-            <tbody id="history-table-body">
-              <!-- Dynamically populated in app.js -->
-            </tbody>
-          </table>
+        <!-- TAB 2: INDIVIDUAL SESSIONS LOG -->
+        <div id="tab-pane-sessions" class="tab-pane">
+          <div class="master-export-card">
+            <div class="master-export-info">
+              <h4><i class="fa-solid fa-database"></i> ส่งออกข้อมูลดิบรวมทุกคน (Master Raw Trials)</h4>
+              <p>รวมบันทึกข้อต่อข้อของผู้ทดสอบทุกคนในระบบเป็นไฟล์เดียวสำหรับ SPSS / Python</p>
+            </div>
+            <div class="master-export-btns">
+              <button id="btn-export-all-csv" class="glass-btn primary sm"><i class="fa-solid fa-file-csv"></i> CSV รายข้อรวมทุกคน</button>
+              <button id="btn-export-all-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> JSON รวมทุกคน</button>
+            </div>
+          </div>
+
+          <div class="table-container history-table-container">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>วันที่ / เวลา</th>
+                  <th>ผู้เข้าร่วม</th>
+                  <th>รอบการทดสอบ</th>
+                  <th>Congruent</th>
+                  <th>Incongruent</th>
+                  <th>ผลต่าง D</th>
+                  <th>ความถูกต้อง</th>
+                  <th>การจัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <!-- Dynamically populated in app.js -->
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+
       <div class="modal-footer">
-        <button id="btn-clear-history" class="glass-btn danger sm"><i class="fa-solid fa-trash-can"></i>
-          ลบประวัติทั้งหมด</button>
+        <button id="btn-clear-history" class="glass-btn danger sm"><i class="fa-solid fa-trash-can"></i> ลบประวัติทั้งหมด</button>
       </div>
     </div>
   </div>

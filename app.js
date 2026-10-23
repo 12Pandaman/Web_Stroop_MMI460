@@ -81,6 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- STATE VARIABLES ---
   let currentParticipantName = '';
+  let currentSessionPhase = 'PRE'; // 'PRE' or 'POST'
+  let currentSessionData = null; // Stored completed session object
   let totalTrialCount = 15;
   let selectedConditionMode = 'ALL_MIXED';
   let trialTimeLimitSec = 4;
@@ -99,8 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let isPracticeMode = false;
   let practiceTrialIndex = 0;
 
-
-
   // --- DOM ELEMENTS ---
   const screenStart = document.getElementById('screen-start');
   const screenTest = document.getElementById('screen-test');
@@ -108,12 +108,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const formStartTest = document.getElementById('form-start-test');
   const participantNameInput = document.getElementById('participant-name');
+  const testSessionSelect = document.getElementById('test-session-select');
   const trialCountSelect = document.getElementById('trial-count-select');
   const conditionModeSelect = document.getElementById('condition-mode-select');
   const timeLimitSelect = document.getElementById('time-limit-select');
   const stimulusDurationSelect = document.getElementById('stimulus-duration-select');
-
-
 
   // Test Arena Elements
   const testProgressBar = document.getElementById('test-progress-bar');
@@ -123,6 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Results Dashboard Elements
   const resParticipantName = document.getElementById('res-participant-name');
+  const resSessionBadge = document.getElementById('res-session-badge');
+  const resSessionName = document.getElementById('res-session-name');
   const resDateTime = document.getElementById('res-date-time');
   const resModeName = document.getElementById('res-mode-name');
   const resAccuracyPct = document.getElementById('res-accuracy-pct');
@@ -141,13 +142,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnSoundToggle = document.getElementById('btn-sound-toggle');
   const btnHistory = document.getElementById('btn-history');
   const btnRestart = document.getElementById('btn-restart');
+  const btnExportResearchCsv = document.getElementById('btn-export-research-csv');
+  const btnCopyResearchTable = document.getElementById('btn-copy-research-table');
   const btnExportCsv = document.getElementById('btn-export-csv');
   const btnExportJson = document.getElementById('btn-export-json');
   const historyCount = document.getElementById('history-count');
+  const historyModalCount = document.getElementById('history-modal-count');
 
   // Modal Elements
   const modalHistory = document.getElementById('modal-history');
   const btnCloseModal = document.getElementById('btn-close-modal');
+  const tabBtnMaster = document.getElementById('tab-btn-master');
+  const tabBtnSessions = document.getElementById('tab-btn-sessions');
+  const tabPaneMaster = document.getElementById('tab-pane-master');
+  const tabPaneSessions = document.getElementById('tab-pane-sessions');
+  const masterResearchTableBody = document.getElementById('master-research-table-body');
+  const btnCopyMasterTable = document.getElementById('btn-copy-master-table');
+  const btnExportMasterSummaryCsv = document.getElementById('btn-export-master-summary-csv');
   const historyTableBody = document.getElementById('history-table-body');
   const btnClearHistory = document.getElementById('btn-clear-history');
   const btnExportAllCsv = document.getElementById('btn-export-all-csv');
@@ -254,6 +265,26 @@ document.addEventListener('DOMContentLoaded', () => {
     btnRestart.addEventListener('click', () => switchScreen(screenStart));
     btnExportCsv.addEventListener('click', exportToCSV);
     btnExportJson.addEventListener('click', exportToJSON);
+
+    if (btnExportResearchCsv) {
+      btnExportResearchCsv.addEventListener('click', () => exportSingleSessionResearchCSV(currentSessionData));
+    }
+    if (btnCopyResearchTable) {
+      btnCopyResearchTable.addEventListener('click', copyCurrentSessionResearchTable);
+    }
+
+    if (tabBtnMaster) {
+      tabBtnMaster.addEventListener('click', () => switchModalTab('master'));
+    }
+    if (tabBtnSessions) {
+      tabBtnSessions.addEventListener('click', () => switchModalTab('sessions'));
+    }
+    if (btnCopyMasterTable) {
+      btnCopyMasterTable.addEventListener('click', copyMasterResearchTable);
+    }
+    if (btnExportMasterSummaryCsv) {
+      btnExportMasterSummaryCsv.addEventListener('click', exportMasterSummaryCSV);
+    }
 
     // Keyboard Shortcuts (EN: 1, 2, 3, 4 | TH: ๅ, /, -, ภ | Numpad: 1-4)
     const KEY_MAP = {
@@ -362,6 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e) e.preventDefault();
     isPracticeMode = false;
     currentParticipantName = participantNameInput.value.trim() || 'ผู้ทดสอบ';
+    currentSessionPhase = testSessionSelect ? testSessionSelect.value : 'PRE';
     totalTrialCount = parseInt(trialCountSelect.value, 10) || 15;
     selectedConditionMode = conditionModeSelect.value;
     trialTimeLimitSec = parseFloat(timeLimitSelect ? timeLimitSelect.value : '4');
@@ -576,12 +608,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const congResponses = userResponses.filter(r => r.isCongruent);
     const incongResponses = userResponses.filter(r => !r.isCongruent);
 
-    const congAvgMs = congResponses.length > 0
-      ? Math.round(congResponses.reduce((a, r) => a + r.reactionTimeMs, 0) / congResponses.length)
-      : 0;
-    const incongAvgMs = incongResponses.length > 0
-      ? Math.round(incongResponses.reduce((a, r) => a + r.reactionTimeMs, 0) / incongResponses.length)
-      : 0;
+    const congCorrect = congResponses.filter(r => r.isCorrect);
+    const incongCorrect = incongResponses.filter(r => r.isCorrect);
+
+    // Calculate Reaction Time for Correct Trials Only (Standard Research Protocol)
+    const congAvgMs = congCorrect.length > 0
+      ? Math.round(congCorrect.reduce((a, r) => a + r.reactionTimeMs, 0) / congCorrect.length)
+      : (congResponses.length > 0 ? Math.round(congResponses.reduce((a, r) => a + r.reactionTimeMs, 0) / congResponses.length) : 0);
+
+    const incongAvgMs = incongCorrect.length > 0
+      ? Math.round(incongCorrect.reduce((a, r) => a + r.reactionTimeMs, 0) / incongCorrect.length)
+      : (incongResponses.length > 0 ? Math.round(incongResponses.reduce((a, r) => a + r.reactionTimeMs, 0) / incongResponses.length) : 0);
 
     const stroopInterferenceMs = incongAvgMs - congAvgMs;
     const stroopInterferenceSec = (stroopInterferenceMs / 1000).toFixed(3);
@@ -591,6 +628,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     resParticipantName.textContent = currentParticipantName;
     resDateTime.textContent = dateFormatted;
+
+    const isPost = currentSessionPhase === 'POST';
+    const phaseLabel = isPost ? 'Post-test' : 'Pre-test';
+
+    if (resSessionBadge) {
+      resSessionBadge.className = isPost ? 'badge-tag session-post' : 'badge-tag session-pre';
+      resSessionBadge.innerHTML = isPost 
+        ? '<i class="fa-solid fa-circle-check"></i> Post-test (หลังการทดลอง)' 
+        : '<i class="fa-solid fa-circle-play"></i> Pre-test (ก่อนการทดลอง)';
+    }
+
+    if (resSessionName) {
+      resSessionName.textContent = isPost ? 'Post-test (หลังการทดลอง)' : 'Pre-test (ก่อนการทดลอง)';
+    }
 
     const modeLabels = {
       'ALL_MIXED': '🔀 สุ่มคละทั้ง 4 เงื่อนไข',
@@ -611,25 +662,32 @@ document.addEventListener('DOMContentLoaded', () => {
     resSlowestRt.textContent = `ช้าสุด: ${slowestRtSec} s (${Math.round(slowestRtSec * 1000)} ms)`;
 
     resStroopEffect.textContent = `${stroopInterferenceSec > 0 ? '+' : ''}${stroopInterferenceSec} s`;
-    resStroopDetail.textContent = `(ส่วนต่างเวลาสับสนสี: ${stroopInterferenceMs} ms)`;
+    resStroopDetail.textContent = `(ส่วนต่างเวลาสับสนสี D = I - C: ${stroopInterferenceMs > 0 ? '+' : ''}${stroopInterferenceMs} ms)`;
 
     populate4ConditionsTable();
     populateTrialTable();
 
-    saveSessionToHistory({
+    currentSessionData = {
       id: Date.now(),
       participantName: currentParticipantName,
+      sessionPhase: currentSessionPhase,
+      phaseLabel: phaseLabel,
       modeName: modeLabels[selectedConditionMode] || selectedConditionMode,
       dateTimeStr: dateFormatted,
       totalCount: totalCount,
       correctCount: correctCount,
       accuracyPct: accuracyPct,
+      congAvgMs: congAvgMs,
+      incongAvgMs: incongAvgMs,
+      diffD: stroopInterferenceMs,
       avgRtSec: avgRtSec,
       avgRtMs: avgRtMs,
       avgCorrectRtSec: avgRtSec,
       avgCorrectRtMs: avgRtMs,
-      responses: userResponses
-    });
+      responses: [...userResponses]
+    };
+
+    saveSessionToHistory(currentSessionData);
 
     switchScreen(screenResults);
   }
@@ -720,14 +778,133 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateHistoryCount() {
     const history = getHistory();
-    historyCount.textContent = history.length;
+    if (historyCount) historyCount.textContent = history.length;
+    if (historyModalCount) historyModalCount.textContent = history.length;
   }
 
   function openHistoryModal() {
-    renderHistoryTable();
+    switchModalTab('master');
     modalHistory.classList.add('modal', 'active');
   }
 
+  function switchModalTab(tabName) {
+    if (tabName === 'master') {
+      if (tabBtnMaster) tabBtnMaster.classList.add('active');
+      if (tabBtnSessions) tabBtnSessions.classList.remove('active');
+      if (tabPaneMaster) tabPaneMaster.classList.add('active');
+      if (tabPaneSessions) tabPaneSessions.classList.remove('active');
+      renderMasterResearchTable();
+    } else {
+      if (tabBtnMaster) tabBtnMaster.classList.remove('active');
+      if (tabBtnSessions) tabBtnSessions.classList.add('active');
+      if (tabPaneMaster) tabPaneMaster.classList.remove('active');
+      if (tabPaneSessions) tabPaneSessions.classList.add('active');
+      renderHistoryTable();
+    }
+  }
+
+  // --- RESEARCH CALCULATION HELPERS ---
+  function calcCongFromResponses(responses) {
+    if (!responses || responses.length === 0) return '-';
+    const cong = responses.filter(r => r.isCongruent);
+    const correct = cong.filter(r => r.isCorrect);
+    const target = correct.length > 0 ? correct : cong;
+    if (target.length === 0) return '-';
+    return Math.round(target.reduce((a, r) => a + r.reactionTimeMs, 0) / target.length);
+  }
+
+  function calcIncongFromResponses(responses) {
+    if (!responses || responses.length === 0) return '-';
+    const incong = responses.filter(r => !r.isCongruent);
+    const correct = incong.filter(r => r.isCorrect);
+    const target = correct.length > 0 ? correct : incong;
+    if (target.length === 0) return '-';
+    return Math.round(target.reduce((a, r) => a + r.reactionTimeMs, 0) / target.length);
+  }
+
+  // --- TAB 1: RENDER MASTER RESEARCH PRE/POST SUMMARY TABLE ---
+  function renderMasterResearchTable() {
+    if (!masterResearchTableBody) return;
+    const history = getHistory();
+    masterResearchTableBody.innerHTML = '';
+
+    if (history.length === 0) {
+      masterResearchTableBody.innerHTML = `
+        <tr>
+          <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
+            <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; opacity: 0.5;"></i>
+            ยังไม่มีข้อมูลประวัติผู้ทดสอบในระบบ กรุณาเริ่มทดสอบรอบ Pre-test หรือ Post-test ก่อน
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    // Group sessions by Participant ID / Name
+    const participantMap = new Map();
+    // history is ordered newest first; we want the latest Pre and latest Post
+    history.forEach(item => {
+      const name = (item.participantName || 'ผู้ทดสอบ').trim();
+      if (!participantMap.has(name)) {
+        participantMap.set(name, { pre: null, post: null });
+      }
+      const pData = participantMap.get(name);
+      const isPost = item.sessionPhase === 'POST' || (item.phaseLabel && item.phaseLabel.toLowerCase().includes('post'));
+      if (isPost && !pData.post) {
+        pData.post = item;
+      } else if (!isPost && !pData.pre) {
+        pData.pre = item;
+      }
+    });
+
+    participantMap.forEach((sessions, pName) => {
+      const pre = sessions.pre;
+      const post = sessions.post;
+
+      const preC = pre ? (pre.congAvgMs !== undefined ? pre.congAvgMs : calcCongFromResponses(pre.responses)) : '-';
+      const preI = pre ? (pre.incongAvgMs !== undefined ? pre.incongAvgMs : calcIncongFromResponses(pre.responses)) : '-';
+      const preD = (preC !== '-' && preI !== '-') ? (preI - preC) : '-';
+      const preDStr = preD !== '-' ? (preD > 0 ? `+${preD}` : `${preD}`) : '-';
+
+      const postC = post ? (post.congAvgMs !== undefined ? post.congAvgMs : calcCongFromResponses(post.responses)) : '-';
+      const postI = post ? (post.incongAvgMs !== undefined ? post.incongAvgMs : calcIncongFromResponses(post.responses)) : '-';
+      const postD = (postC !== '-' && postI !== '-') ? (postI - postC) : '-';
+      const postDStr = postD !== '-' ? (postD > 0 ? `+${postD}` : `${postD}`) : '-';
+
+      let deltaDStr = '-';
+      let changeNote = '<span style="color: var(--text-muted);">-</span>';
+
+      if (preD !== '-' && postD !== '-') {
+        const delta = postD - preD;
+        deltaDStr = delta > 0 ? `+${delta}` : `${delta}`;
+        if (delta < 0) {
+          changeNote = `<span class="badge-tag success"><i class="fa-solid fa-arrow-trend-down"></i> ลดลง ${Math.abs(delta)} ms (ดีขึ้น)</span>`;
+        } else if (delta > 0) {
+          changeNote = `<span class="badge-tag danger"><i class="fa-solid fa-arrow-trend-up"></i> เพิ่มขึ้น ${delta} ms</span>`;
+        } else {
+          changeNote = `<span class="badge-tag warning">เท่าเดิม (0 ms)</span>`;
+        }
+      }
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${pName}</strong></td>
+        <td class="num-font">${preC !== '-' ? `${preC} ms` : '-'}</td>
+        <td class="num-font">${preI !== '-' ? `${preI} ms` : '-'}</td>
+        <td class="num-font highlight" style="color: #60a5fa; font-weight: 700;">${preDStr !== '-' ? `${preDStr} ms` : '-'}</td>
+        <td class="num-font">${postC !== '-' ? `${postC} ms` : '-'}</td>
+        <td class="num-font">${postI !== '-' ? `${postI} ms` : '-'}</td>
+        <td class="num-font highlight" style="color: #34d399; font-weight: 700;">${postDStr !== '-' ? `${postDStr} ms` : '-'}</td>
+        <td class="num-font" style="font-weight: 800; font-size: 0.95rem; color: ${deltaDStr.startsWith('-') ? '#34d399' : (deltaDStr.startsWith('+') ? '#f87171' : 'inherit')}">
+          ${deltaDStr !== '-' ? `${deltaDStr} ms` : '-'}
+        </td>
+        <td>${changeNote}</td>
+      `;
+      masterResearchTableBody.appendChild(tr);
+    });
+  }
+
+  // --- TAB 2: RENDER INDIVIDUAL SESSIONS LOG (8 Columns) ---
   function renderHistoryTable() {
     const history = getHistory();
     historyTableBody.innerHTML = '';
@@ -735,7 +912,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (history.length === 0) {
       historyTableBody.innerHTML = `
         <tr>
-          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+          <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2.5rem;">
             ยังไม่มีประวัติการทดสอบในระบบ
           </td>
         </tr>
@@ -745,22 +922,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     history.forEach(item => {
       const tr = document.createElement('tr');
+      const isPost = item.sessionPhase === 'POST' || (item.phaseLabel && item.phaseLabel.toLowerCase().includes('post'));
+      const phaseBadge = isPost 
+        ? '<span class="badge-tag session-post">🟢 Post-test</span>'
+        : '<span class="badge-tag session-pre">🔵 Pre-test</span>';
+
+      const cMs = item.congAvgMs !== undefined ? item.congAvgMs : calcCongFromResponses(item.responses);
+      const iMs = item.incongAvgMs !== undefined ? item.incongAvgMs : calcIncongFromResponses(item.responses);
+      const diffD = (cMs !== '-' && iMs !== '-') ? (iMs - cMs) : (item.diffD !== undefined ? item.diffD : '-');
+      const diffDStr = diffD !== '-' ? (diffD > 0 ? `+${diffD}` : `${diffD}`) : '-';
+
       tr.innerHTML = `
-        <td>${item.dateTimeStr}</td>
+        <td><small>${item.dateTimeStr}</small></td>
         <td><strong>${item.participantName}</strong></td>
-        <td><span class="cond-tag">${item.modeName || 'สุ่มคละ'}</span></td>
-        <td><span class="badge-tag success">${item.accuracyPct}% (${item.correctCount}/${item.totalCount})</span></td>
-        <td class="num-font highlight">${item.avgRtSec || item.avgCorrectRtSec || '0.000'} s</td>
+        <td>${phaseBadge}</td>
+        <td class="num-font">${cMs !== '-' ? `${cMs} ms` : '-'}</td>
+        <td class="num-font">${iMs !== '-' ? `${iMs} ms` : '-'}</td>
+        <td class="num-font highlight" style="color: #facc15; font-weight: 700;">${diffDStr !== '-' ? `${diffDStr} ms` : '-'}</td>
+        <td><span class="badge-tag success">${item.accuracyPct}%</span></td>
         <td>
           <div class="action-btn-group">
             <button class="glass-btn secondary sm btn-view-session" title="ดูผลลัพธ์ผู้ทดสอบนี้">
               <i class="fa-solid fa-eye"></i> ดูผล
             </button>
-            <button class="glass-btn secondary sm btn-csv-session" title="ดาวน์โหลด CSV ผู้ทดสอบนี้">
-              <i class="fa-solid fa-file-csv"></i> CSV
-            </button>
-            <button class="glass-btn secondary sm btn-json-session" title="ดาวน์โหลด JSON ผู้ทดสอบนี้">
-              <i class="fa-solid fa-file-code"></i> JSON
+            <button class="glass-btn secondary sm btn-csv-session" title="ดาวน์โหลด Sheet สรุปผู้ทดสอบนี้">
+              <i class="fa-solid fa-file-excel"></i> Sheet
             </button>
             <button class="icon-btn sm btn-delete-item" title="ลบรายการนี้">
               <i class="fa-solid fa-trash-can" style="color: var(--accent-red); font-size: 0.85rem;"></i>
@@ -770,8 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       tr.querySelector('.btn-view-session').addEventListener('click', () => loadParticipantSession(item));
-      tr.querySelector('.btn-csv-session').addEventListener('click', () => exportSingleSessionCSV(item));
-      tr.querySelector('.btn-json-session').addEventListener('click', () => exportSingleSessionJSON(item));
+      tr.querySelector('.btn-csv-session').addEventListener('click', () => exportSingleSessionResearchCSV(item));
       tr.querySelector('.btn-delete-item').addEventListener('click', () => deleteHistoryItem(item.id));
       historyTableBody.appendChild(tr);
     });
@@ -781,16 +966,36 @@ document.addEventListener('DOMContentLoaded', () => {
     currentParticipantName = sessionData.participantName;
     userResponses = sessionData.responses || [];
     selectedConditionMode = sessionData.modeName;
+    currentSessionPhase = sessionData.sessionPhase || 'PRE';
+    currentSessionData = sessionData;
 
     resParticipantName.textContent = sessionData.participantName;
     resDateTime.textContent = sessionData.dateTimeStr;
     resModeName.textContent = sessionData.modeName;
+
+    const isPost = currentSessionPhase === 'POST' || (sessionData.phaseLabel && sessionData.phaseLabel.toLowerCase().includes('post'));
+    if (resSessionBadge) {
+      resSessionBadge.className = isPost ? 'badge-tag session-post' : 'badge-tag session-pre';
+      resSessionBadge.innerHTML = isPost 
+        ? '<i class="fa-solid fa-circle-check"></i> Post-test (หลังการทดลอง)' 
+        : '<i class="fa-solid fa-circle-play"></i> Pre-test (ก่อนการทดลอง)';
+    }
+    if (resSessionName) {
+      resSessionName.textContent = isPost ? 'Post-test (หลังการทดลอง)' : 'Pre-test (ก่อนการทดลอง)';
+    }
 
     resAccuracyPct.textContent = `${sessionData.accuracyPct}%`;
     resAccuracyCount.textContent = `ตอบถูก ${sessionData.correctCount} จาก ${sessionData.totalCount} ข้อ`;
 
     resAvgCorrectRtSec.textContent = `${sessionData.avgRtSec || sessionData.avgCorrectRtSec || '0.000'} s`;
     resAvgCorrectRtMs.textContent = `(${sessionData.avgRtMs || sessionData.avgCorrectRtMs || 0} ms)`;
+
+    const cMs = sessionData.congAvgMs !== undefined ? sessionData.congAvgMs : calcCongFromResponses(sessionData.responses);
+    const iMs = sessionData.incongAvgMs !== undefined ? sessionData.incongAvgMs : calcIncongFromResponses(sessionData.responses);
+    const diffD = (cMs !== '-' && iMs !== '-') ? (iMs - cMs) : (sessionData.diffD !== undefined ? sessionData.diffD : 0);
+
+    resStroopEffect.textContent = `${diffD > 0 ? '+' : ''}${(diffD / 1000).toFixed(3)} s`;
+    resStroopDetail.textContent = `(ส่วนต่างเวลาสับสนสี D = I - C: ${diffD > 0 ? '+' : ''}${diffD} ms)`;
 
     populate4ConditionsTable();
     populateTrialTable();
@@ -804,6 +1009,7 @@ document.addEventListener('DOMContentLoaded', () => {
     history = history.filter(h => h.id !== id);
     localStorage.setItem('stroop_pro_history', JSON.stringify(history));
     renderHistoryTable();
+    renderMasterResearchTable();
     updateHistoryCount();
   }
 
@@ -811,35 +1017,197 @@ document.addEventListener('DOMContentLoaded', () => {
     if (confirm('คุณต้องการลบประวัติการทดสอบทั้งหมดใช่หรือไม่?')) {
       localStorage.removeItem('stroop_pro_history');
       renderHistoryTable();
+      renderMasterResearchTable();
       updateHistoryCount();
     }
   }
 
-  // --- EXPORT FUNCTIONS ---
+  // --- RESEARCH SUMMARY EXPORT & COPY FUNCTIONS (สำหรับ Google Sheets / Excel) ---
+  function exportSingleSessionResearchCSV(sessionData) {
+    const data = sessionData || currentSessionData;
+    if (!data) return;
+
+    const cMs = data.congAvgMs !== undefined ? data.congAvgMs : calcCongFromResponses(data.responses);
+    const iMs = data.incongAvgMs !== undefined ? data.incongAvgMs : calcIncongFromResponses(data.responses);
+    const diffD = (cMs !== '-' && iMs !== '-') ? (iMs - cMs) : (data.diffD !== undefined ? data.diffD : 0);
+    const dStr = diffD > 0 ? `+${diffD}` : `${diffD}`;
+    const phaseLabel = data.phaseLabel || (data.sessionPhase === 'POST' ? 'Post-test' : 'Pre-test');
+
+    let csvContent = '\uFEFF';
+    csvContent += 'ผู้เข้าร่วม,รอบการทดสอบ,Congruent (ms),Incongruent (ms),ผลต่าง D = I - C (ms),ความถูกต้อง (%),เวลาเฉลี่ยรวม (ms),ตอบถูก/ทั้งหมด,วันที่ทดสอบ\n';
+    csvContent += `"${data.participantName}","${phaseLabel}",${cMs},${iMs},${dStr},"${data.accuracyPct}%",${data.avgRtMs || 0},"${data.correctCount}/${data.totalCount}","${data.dateTimeStr}"\n`;
+
+    downloadFile(csvContent, `Stroop_Summary_${data.participantName}_${phaseLabel}_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+  }
+
+  function copyCurrentSessionResearchTable() {
+    if (!currentSessionData) return;
+    const cMs = currentSessionData.congAvgMs !== undefined ? currentSessionData.congAvgMs : calcCongFromResponses(currentSessionData.responses);
+    const iMs = currentSessionData.incongAvgMs !== undefined ? currentSessionData.incongAvgMs : calcIncongFromResponses(currentSessionData.responses);
+    const diffD = (cMs !== '-' && iMs !== '-') ? (iMs - cMs) : (currentSessionData.diffD !== undefined ? currentSessionData.diffD : 0);
+    const dStr = diffD > 0 ? `+${diffD}` : `${diffD}`;
+    const phaseLabel = currentSessionData.phaseLabel || (currentSessionPhase === 'POST' ? 'Post-test' : 'Pre-test');
+
+    const tsvContent = `ผู้เข้าร่วม\tรอบการทดสอบ\tCongruent (ms)\tIncongruent (ms)\tผลต่าง D = I - C\tความถูกต้อง\n` +
+      `${currentSessionData.participantName}\t${phaseLabel}\t${cMs}\t${iMs}\t${dStr}\t${currentSessionData.accuracyPct}%`;
+
+    navigator.clipboard.writeText(tsvContent).then(() => {
+      if (btnCopyResearchTable) {
+        const origHtml = btnCopyResearchTable.innerHTML;
+        btnCopyResearchTable.innerHTML = '<i class="fa-solid fa-check"></i> คัดลอกลง Sheet แล้ว!';
+        setTimeout(() => { btnCopyResearchTable.innerHTML = origHtml; }, 2000);
+      }
+    }).catch(err => {
+      console.warn('Clipboard copy failed', err);
+    });
+  }
+
+  function exportMasterSummaryCSV() {
+    const history = getHistory();
+    if (history.length === 0) {
+      alert('ยังไม่มีข้อมูลประวัติผู้ทดสอบในระบบ');
+      return;
+    }
+
+    const participantMap = new Map();
+    history.forEach(item => {
+      const name = (item.participantName || 'ผู้ทดสอบ').trim();
+      if (!participantMap.has(name)) participantMap.set(name, { pre: null, post: null });
+      const pData = participantMap.get(name);
+      const isPost = item.sessionPhase === 'POST' || (item.phaseLabel && item.phaseLabel.toLowerCase().includes('post'));
+      if (isPost && !pData.post) pData.post = item;
+      else if (!isPost && !pData.pre) pData.pre = item;
+    });
+
+    let csvContent = '\uFEFF';
+    csvContent += 'ตารางสรุปผลวิจัย STROOP EFFECT: เปรียบเทียบ PRE-TEST vs POST-TEST\n';
+    csvContent += `วันที่ส่งออก,${new Date().toLocaleString('th-TH')}\n`;
+    csvContent += `จำนวนผู้เข้าร่วมทั้งหมด,${participantMap.size}\n\n`;
+
+    csvContent += 'ผู้เข้าร่วม,Pre Congruent (ms),Pre Incongruent (ms),Pre ผลต่าง D (ms),Post Congruent (ms),Post Incongruent (ms),Post ผลต่าง D (ms),ผลต่าง Delta D (Post - Pre),การเปลี่ยนแปลง,Pre ความถูกต้อง,Post ความถูกต้อง\n';
+
+    participantMap.forEach((sessions, pName) => {
+      const pre = sessions.pre;
+      const post = sessions.post;
+
+      const preC = pre ? (pre.congAvgMs !== undefined ? pre.congAvgMs : calcCongFromResponses(pre.responses)) : '';
+      const preI = pre ? (pre.incongAvgMs !== undefined ? pre.incongAvgMs : calcIncongFromResponses(pre.responses)) : '';
+      const preD = (preC !== '' && preI !== '') ? (preI - preC) : '';
+      const preDStr = preD !== '' ? (preD > 0 ? `+${preD}` : `${preD}`) : '';
+
+      const postC = post ? (post.congAvgMs !== undefined ? post.congAvgMs : calcCongFromResponses(post.responses)) : '';
+      const postI = post ? (post.incongAvgMs !== undefined ? post.incongAvgMs : calcIncongFromResponses(post.responses)) : '';
+      const postD = (postC !== '' && postI !== '') ? (postI - postC) : '';
+      const postDStr = postD !== '' ? (postD > 0 ? `+${postD}` : `${postD}`) : '';
+
+      let deltaDStr = '';
+      let changeText = '-';
+
+      if (preD !== '' && postD !== '') {
+        const delta = postD - preD;
+        deltaDStr = delta > 0 ? `+${delta}` : `${delta}`;
+        if (delta < 0) changeText = `ลดลง ${Math.abs(delta)} ms (ดีขึ้น)`;
+        else if (delta > 0) changeText = `เพิ่มขึ้น ${delta} ms`;
+        else changeText = 'เท่าเดิม';
+      }
+
+      const preAcc = pre ? `${pre.accuracyPct}%` : '';
+      const postAcc = post ? `${post.accuracyPct}%` : '';
+
+      csvContent += `"${pName}",${preC},${preI},${preDStr},${postC},${postI},${postDStr},${deltaDStr},"${changeText}","${preAcc}","${postAcc}"\n`;
+    });
+
+    downloadFile(csvContent, `Stroop_Master_PrePost_Research_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+  }
+
+  function copyMasterResearchTable() {
+    const history = getHistory();
+    if (history.length === 0) {
+      alert('ยังไม่มีข้อมูลสำหรับคัดลอก');
+      return;
+    }
+
+    const participantMap = new Map();
+    history.forEach(item => {
+      const name = (item.participantName || 'ผู้ทดสอบ').trim();
+      if (!participantMap.has(name)) participantMap.set(name, { pre: null, post: null });
+      const pData = participantMap.get(name);
+      const isPost = item.sessionPhase === 'POST' || (item.phaseLabel && item.phaseLabel.toLowerCase().includes('post'));
+      if (isPost && !pData.post) pData.post = item;
+      else if (!isPost && !pData.pre) pData.pre = item;
+    });
+
+    let tsvContent = 'ผู้เข้าร่วม\tPre Congruent (ms)\tPre Incongruent (ms)\tPre ผลต่าง D\tPost Congruent (ms)\tPost Incongruent (ms)\tPost ผลต่าง D\tDelta D (Post - Pre)\tการเปลี่ยนแปลง\n';
+
+    participantMap.forEach((sessions, pName) => {
+      const pre = sessions.pre;
+      const post = sessions.post;
+
+      const preC = pre ? (pre.congAvgMs !== undefined ? pre.congAvgMs : calcCongFromResponses(pre.responses)) : '';
+      const preI = pre ? (pre.incongAvgMs !== undefined ? pre.incongAvgMs : calcIncongFromResponses(pre.responses)) : '';
+      const preD = (preC !== '' && preI !== '') ? (preI - preC) : '';
+      const preDStr = preD !== '' ? (preD > 0 ? `+${preD}` : `${preD}`) : '';
+
+      const postC = post ? (post.congAvgMs !== undefined ? post.congAvgMs : calcCongFromResponses(post.responses)) : '';
+      const postI = post ? (post.incongAvgMs !== undefined ? post.incongAvgMs : calcIncongFromResponses(post.responses)) : '';
+      const postD = (postC !== '' && postI !== '') ? (postI - postC) : '';
+      const postDStr = postD !== '' ? (postD > 0 ? `+${postD}` : `${postD}`) : '';
+
+      let deltaDStr = '';
+      let changeText = '-';
+
+      if (preD !== '' && postD !== '') {
+        const delta = postD - preD;
+        deltaDStr = delta > 0 ? `+${delta}` : `${delta}`;
+        if (delta < 0) changeText = `ลดลง ${Math.abs(delta)} ms (ดีขึ้น)`;
+        else if (delta > 0) changeText = `เพิ่มขึ้น ${delta} ms`;
+        else changeText = 'เท่าเดิม';
+      }
+
+      tsvContent += `${pName}\t${preC}\t${preI}\t${preDStr}\t${postC}\t${postI}\t${postDStr}\t${deltaDStr}\t${changeText}\n`;
+    });
+
+    navigator.clipboard.writeText(tsvContent).then(() => {
+      if (btnCopyMasterTable) {
+        const origHtml = btnCopyMasterTable.innerHTML;
+        btnCopyMasterTable.innerHTML = '<i class="fa-solid fa-check"></i> คัดลอกตาราง Master ลง Sheet แล้ว!';
+        setTimeout(() => { btnCopyMasterTable.innerHTML = origHtml; }, 2000);
+      }
+    }).catch(err => {
+      console.warn('Clipboard copy failed', err);
+    });
+  }
+
+  // --- RAW TRIALS EXPORTS ---
   function exportToCSV() {
     if (userResponses.length === 0) return;
+    const phaseLabel = currentSessionPhase === 'POST' ? 'Post-test' : 'Pre-test';
 
     let csvContent = '\uFEFF';
     csvContent += `Participant Name,${currentParticipantName}\n`;
+    csvContent += `Test Phase,${phaseLabel}\n`;
     csvContent += `Date,${new Date().toLocaleString('th-TH')}\n`;
     csvContent += `Mode,${selectedConditionMode}\n`;
     csvContent += `Total Trials,${userResponses.length}\n\n`;
 
-    csvContent += 'Trial,Condition,Prompt Text,Ink Color,User Answer,Correct Answer,Status,Reaction Time (s),Reaction Time (ms),Is Congruent\n';
+    csvContent += 'Trial,Phase,Condition,Prompt Text,Ink Color,User Answer,Correct Answer,Status,Reaction Time (s),Reaction Time (ms),Is Congruent\n';
 
     userResponses.forEach(r => {
       const statusStr = r.isCorrect ? 'Correct' : (r.isTimeout ? 'Timeout' : 'Incorrect');
-      csvContent += `${r.trialNo},${r.condCode},${r.promptText},${r.inkColorKey},${r.userAnswerText},${r.correctAnswerText},${statusStr},${r.reactionTimeSec},${Math.round(r.reactionTimeMs)},${r.isCongruent ? 'Yes' : 'No'}\n`;
+      csvContent += `${r.trialNo},${phaseLabel},${r.condCode},${r.promptText},${r.inkColorKey},${r.userAnswerText},${r.correctAnswerText},${statusStr},${r.reactionTimeSec},${Math.round(r.reactionTimeMs)},${r.isCongruent ? 'Yes' : 'No'}\n`;
     });
 
-    downloadFile(csvContent, `Stroop_${currentParticipantName}_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+    downloadFile(csvContent, `Stroop_${currentParticipantName}_${phaseLabel}_Raw_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
   }
 
   function exportToJSON() {
     if (userResponses.length === 0) return;
+    const phaseLabel = currentSessionPhase === 'POST' ? 'Post-test' : 'Pre-test';
 
     const dataObj = {
       participantName: currentParticipantName,
+      sessionPhase: currentSessionPhase,
+      phaseLabel: phaseLabel,
       mode: selectedConditionMode,
       timestamp: new Date().toISOString(),
       totalCount: userResponses.length,
@@ -847,32 +1215,34 @@ document.addEventListener('DOMContentLoaded', () => {
       responses: userResponses
     };
 
-    downloadFile(JSON.stringify(dataObj, null, 2), `Stroop_${currentParticipantName}_${Date.now()}.json`, 'application/json');
+    downloadFile(JSON.stringify(dataObj, null, 2), `Stroop_${currentParticipantName}_${phaseLabel}_${Date.now()}.json`, 'application/json');
   }
 
   function exportSingleSessionCSV(sessionData) {
     let csvContent = '\uFEFF';
+    const phase = sessionData.phaseLabel || (sessionData.sessionPhase === 'POST' ? 'Post-test' : 'Pre-test');
     csvContent += `Participant Name,${sessionData.participantName}\n`;
+    csvContent += `Test Phase,${phase}\n`;
     csvContent += `Date,${sessionData.dateTimeStr}\n`;
     csvContent += `Mode,${sessionData.modeName}\n`;
     csvContent += `Accuracy,${sessionData.accuracyPct}%\n`;
     csvContent += `Average Reaction Time (s),${sessionData.avgRtSec || sessionData.avgCorrectRtSec}\n\n`;
 
-    csvContent += 'Trial,Condition,Prompt Text,Ink Color,User Answer,Correct Answer,Status,Reaction Time (s),Reaction Time (ms),Is Congruent\n';
+    csvContent += 'Trial,Phase,Condition,Prompt Text,Ink Color,User Answer,Correct Answer,Status,Reaction Time (s),Reaction Time (ms),Is Congruent\n';
 
     (sessionData.responses || []).forEach(r => {
       const statusStr = r.isCorrect ? 'Correct' : (r.isTimeout ? 'Timeout' : 'Incorrect');
-      csvContent += `${r.trialNo},${r.condCode},${r.promptText},${r.inkColorKey},${r.userAnswerText},${r.correctAnswerText},${statusStr},${r.reactionTimeSec},${Math.round(r.reactionTimeMs)},${r.isCongruent ? 'Yes' : 'No'}\n`;
+      csvContent += `${r.trialNo},${phase},${r.condCode},${r.promptText},${r.inkColorKey},${r.userAnswerText},${r.correctAnswerText},${statusStr},${r.reactionTimeSec},${Math.round(r.reactionTimeMs)},${r.isCongruent ? 'Yes' : 'No'}\n`;
     });
 
-    downloadFile(csvContent, `Stroop_${sessionData.participantName}_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+    downloadFile(csvContent, `Stroop_${sessionData.participantName}_${phase}_Raw_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
   }
 
   function exportSingleSessionJSON(sessionData) {
-    downloadFile(JSON.stringify(sessionData, null, 2), `Stroop_${sessionData.participantName}_${Date.now()}.json`, 'application/json');
+    downloadFile(JSON.stringify(sessionData, null, 2), `Stroop_${sessionData.participantName}_${sessionData.phaseLabel || 'Session'}_${Date.now()}.json`, 'application/json');
   }
 
-  // --- MASTER BULK EXPORT (ข้อมูลทุกคนรวมเป็นไฟล์เดียว) ---
+  // --- MASTER BULK EXPORT (ข้อมูลดิบทุกคนรวมเป็นไฟล์เดียว) ---
   function exportAllToCSV() {
     const history = getHistory();
     if (history.length === 0) {
@@ -885,16 +1255,17 @@ document.addEventListener('DOMContentLoaded', () => {
     csvContent += `Generated Date,${new Date().toLocaleString('th-TH')}\n`;
     csvContent += `Total Participants / Sessions,${history.length}\n\n`;
 
-    csvContent += 'Participant Name,Session Date,Mode,Trial No,Condition Code,Prompt Text,Ink Color,User Answer,Correct Answer,Status,Reaction Time (s),Reaction Time (ms),Is Congruent\n';
+    csvContent += 'Participant Name,Phase,Session Date,Mode,Trial No,Condition Code,Prompt Text,Ink Color,User Answer,Correct Answer,Status,Reaction Time (s),Reaction Time (ms),Is Congruent\n';
 
     history.forEach(session => {
+      const phase = session.phaseLabel || (session.sessionPhase === 'POST' ? 'Post-test' : 'Pre-test');
       (session.responses || []).forEach(r => {
         const statusStr = r.isCorrect ? 'Correct' : (r.isTimeout ? 'Timeout' : 'Incorrect');
-        csvContent += `"${session.participantName}","${session.dateTimeStr}","${session.modeName}",${r.trialNo},${r.condCode},"${r.promptText}",${r.inkColorKey},"${r.userAnswerText}","${r.correctAnswerText}",${statusStr},${r.reactionTimeSec},${Math.round(r.reactionTimeMs)},${r.isCongruent ? 'Yes' : 'No'}\n`;
+        csvContent += `"${session.participantName}","${phase}","${session.dateTimeStr}","${session.modeName}",${r.trialNo},${r.condCode},"${r.promptText}",${r.inkColorKey},"${r.userAnswerText}","${r.correctAnswerText}",${statusStr},${r.reactionTimeSec},${Math.round(r.reactionTimeMs)},${r.isCongruent ? 'Yes' : 'No'}\n`;
       });
     });
 
-    downloadFile(csvContent, `Stroop_Master_All_Participants_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
+    downloadFile(csvContent, `Stroop_Master_All_Trials_${Date.now()}.csv`, 'text/csv;charset=utf-8;');
   }
 
   function exportAllToJSON() {

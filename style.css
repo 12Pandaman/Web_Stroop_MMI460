@@ -1002,6 +1002,153 @@ body {
   gap: 0.4rem;
 }
 
+.modal-content.modal-lg {
+  max-width: 1080px;
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-glass);
+  padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-primary);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-btn.active {
+  color: #ffffff;
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.5);
+  font-weight: 600;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.badge-tag.session-pre {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.badge-tag.session-post {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.master-table-container {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+}
+
+.master-research-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.master-research-table th,
+.master-research-table td {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border-glass);
+}
+
+.master-research-table th {
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--text-main);
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.master-research-table th.th-group.th-pre {
+  background: rgba(30, 58, 138, 0.7);
+  color: #93c5fd;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.master-research-table th.th-group.th-post {
+  background: rgba(6, 95, 70, 0.7);
+  color: #6ee7b7;
+  border-bottom: 2px solid #10b981;
+}
+
+.master-research-table th.th-sub {
+  font-size: 0.8rem;
+  background: rgba(30, 41, 59, 0.9);
+  color: var(--text-muted);
+}
+
+.master-research-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sheet-formula-guide {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-md);
+}
+
+.sheet-formula-guide .guide-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.formula-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.formula-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.formula-item code {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: #38bdf8;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
 /* ==========================================================================
    THEME SWITCHER & PALETTES
    ========================================================================== */
