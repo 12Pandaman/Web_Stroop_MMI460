@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -49,8 +49,8 @@
         <button id="btn-sound-toggle" class="icon-btn" title="เปิด/ปิด เสียงเอฟเฟกต์">
           <i class="fa-solid fa-volume-high"></i>
         </button>
-        <button id="btn-history" class="glass-btn secondary sm">
-          <i class="fa-solid fa-list-check"></i> ประวัติผู้ทดสอบ (<span id="history-count">0</span>)
+        <button id="btn-admin-portal" class="glass-btn primary sm" title="เปิดห้องแอดมินสำหรับผู้ทำการทดลอง">
+          <i class="fa-solid fa-lock"></i> ห้องแอดมิน (Admin) <span id="admin-badge-count" class="badge-count">0</span>
         </button>
       </div>
     </header>
@@ -98,6 +98,14 @@
           </div>
         </div>
 
+        <!-- Keyboard instructions banner -->
+        <div class="keyboard-instruction-banner">
+          <i class="fa-solid fa-keyboard"></i>
+          <div>
+            <strong>ปุ่มคีย์บอร์ดที่ใช้ตอบ:</strong> กด <kbd class="kbd-key">Z</kbd> (แดง) &bull; <kbd class="kbd-key">X</kbd> (น้ำเงิน) &bull; <kbd class="kbd-key">C</kbd> (เขียว) &bull; <kbd class="kbd-key">V</kbd> (เหลือง) หรือแป้นตัวเลข <kbd class="kbd-key">1</kbd> <kbd class="kbd-key">2</kbd> <kbd class="kbd-key">3</kbd> <kbd class="kbd-key">4</kbd> (รองรับทั้งภาษาไทยและอังกฤษ) หรือคลิกเมาส์
+          </div>
+        </div>
+
         <form id="form-start-test" class="setup-form">
           <div class="form-grid">
             <div class="input-group">
@@ -106,12 +114,18 @@
                 autocomplete="off" value="P01">
             </div>
             <div class="input-group">
-              <label for="test-session-select"><i class="fa-solid fa-clipboard-check"></i> รอบการทดสอบ (Test Phase)</label>
-              <select id="test-session-select" class="session-select">
-                <option value="PRE" selected>🔵 Pre-test (ก่อนการทดลอง)</option>
-                <option value="POST">🟢 Post-test (หลังการทดลอง)</option>
-              </select>
+              <label for="camp-name"><i class="fa-solid fa-campground"></i> ชื่อค่าย / กลุ่มทดลอง (ถ้ามี)</label>
+              <input type="text" id="camp-name" placeholder="เช่น ค่าย MMI, กลุ่ม 1 (ไม่บังคับ)" autocomplete="off">
             </div>
+          </div>
+
+          <div class="input-group">
+            <label for="test-session-select"><i class="fa-solid fa-clipboard-check"></i> รูปแบบรอบการทดสอบ (Research Flow)</label>
+            <select id="test-session-select" class="session-select">
+              <option value="AUTO_PRE_POST" selected>🟣 ทำครบ 2 รอบต่อเนื่อง (รอบ 1: Pre-test ➔ รอบ 2: Post-test) [แนะนำเพื่อรวมในชีตเดียว]</option>
+              <option value="PRE">🔵 ทำเฉพาะรอบที่ 1: Pre-test อย่างเดียว</option>
+              <option value="POST">🟢 ทำเฉพาะรอบที่ 2: Post-test อย่างเดียว</option>
+            </select>
           </div>
 
           <div class="form-grid">
@@ -127,11 +141,11 @@
             </div>
 
             <div class="input-group">
-              <label for="trial-count-select"><i class="fa-solid fa-list-ol"></i> จำนวนข้อในการทดสอบ</label>
+              <label for="trial-count-select"><i class="fa-solid fa-list-ol"></i> จำนวนข้อต่อรอบการทดสอบ</label>
               <select id="trial-count-select">
-                <option value="15" selected>15 ข้อ (แนะนำ)</option>
-                <option value="20">20 ข้อ</option>
-                <option value="30">30 ข้อ</option>
+                <option value="15" selected>15 ข้อต่อรอบ (แนะนำ)</option>
+                <option value="20">20 ข้อต่อรอบ</option>
+                <option value="30">30 ข้อต่อรอบ</option>
               </select>
             </div>
           </div>
@@ -158,6 +172,13 @@
             </select>
           </div>
 
+          <div class="input-group checkbox-group" style="margin-top: 0.5rem; margin-bottom: 0.85rem;">
+            <label class="custom-checkbox-label" for="auto-download-csv-checkbox" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.6rem; user-select: none;">
+              <input type="checkbox" id="auto-download-csv-checkbox" checked style="width: 18px; height: 18px; accent-color: #10b981; cursor: pointer;">
+              <span><i class="fa-solid fa-file-csv text-green"></i> <strong>ดาวน์โหลดไฟล์ CSV อัตโนมัติเมื่อทำแบบทดสอบเสร็จ</strong></span>
+            </label>
+          </div>
+
           <div class="start-btn-group">
             <button type="button" id="btn-start-practice" class="glass-btn secondary lg">
               <i class="fa-solid fa-graduation-cap"></i> 🎓 ทดลองซ้อมทำ (4 ข้อซ้อม)
@@ -173,9 +194,32 @@
     <!-- SECTION 2: TEST ARENA SCREEN -->
     <section id="screen-test" class="screen">
 
+      <!-- 3-Second Countdown Overlay (Pre-test & Post-test) -->
+      <div id="test-countdown-overlay" class="countdown-overlay" style="display: none;">
+        <div class="countdown-modal-card">
+          <div id="countdown-phase-badge" class="badge-tag session-pre">
+            <i class="fa-solid fa-play"></i> เตรียมตัว: รอบที่ 1 (Pre-test)
+          </div>
+          <div class="countdown-circle-outer">
+            <div id="countdown-number" class="countdown-big-num">3</div>
+          </div>
+          <div class="countdown-message">
+            <h3>การทดสอบกำลังจะเริ่มขึ้น...</h3>
+            <p><i class="fa-solid fa-crosshairs"></i> ตั้งสมาธิมองที่กึ่งกลางจอ แล้วตอบปุ่ม <strong>"สีของหมึก"</strong></p>
+          </div>
+        </div>
+      </div>
+
       <!-- Practice Mode Banner -->
       <div id="practice-hud-banner" class="practice-hud-banner" style="display: none;">
         <i class="fa-solid fa-graduation-cap"></i> <strong>โหมดทดลองซ้อมทำ:</strong> ข้อที่ <span id="practice-trial-num">1</span> / 4 (ข้อสอบซ้อม ไม่คิดคะแนนจริง)
+      </div>
+
+      <!-- Real Test Phase & Trial HUD -->
+      <div id="test-phase-hud" class="test-phase-hud">
+        <span id="test-phase-badge" class="badge-tag session-pre"><i class="fa-solid fa-play"></i> รอบที่ 1: Pre-test</span>
+        <span class="hud-divider">•</span>
+        <span>ข้อที่ <strong id="test-trial-current">1</strong> / <span id="test-trial-total">15</span></span>
       </div>
 
       <!-- Stimulus Box -->
@@ -189,10 +233,106 @@
         <div id="answer-buttons-grid" class="answers-grid">
           <!-- Buttons dynamically created in app.js depending on condition -->
         </div>
+        <!-- Keyboard Shortcuts Guide -->
+        <div class="keyboard-guide">
+          <span class="guide-title"><i class="fa-solid fa-keyboard"></i> แป้นพิมพ์:</span>
+          <span class="guide-item"><kbd class="kbd-key">Z</kbd> แดง</span>
+          <span class="guide-item"><kbd class="kbd-key">X</kbd> น้ำเงิน</span>
+          <span class="guide-item"><kbd class="kbd-key">C</kbd> เขียว</span>
+          <span class="guide-item"><kbd class="kbd-key">V</kbd> เหลือง</span>
+          <span class="guide-alt">(หรือกด 1, 2, 3, 4 หรือคลิกปุ่ม)</span>
+        </div>
       </div>
     </section>
 
-    <!-- SECTION 3: RESULTS DASHBOARD SCREEN -->
+    <!-- SECTION 2.5: BREAK / REST SCREEN (ช่วงพักระหว่าง Pre-test และ Post-test) -->
+    <section id="screen-break" class="screen">
+      <div class="glass-card main-card break-card text-center">
+        <div class="card-badge info"><i class="fa-solid fa-mug-hot"></i> Rest & Break Phase</div>
+        <div class="break-icon-wrap">
+          <i class="fa-solid fa-couch"></i>
+        </div>
+        <h2>ช่วงพักระหว่างรอบการทดลอง</h2>
+        <p class="subtitle">ท่านได้ทำแบบทดสอบ <strong>ช่วงที่ 1: Pre-test</strong> เสร็จสิ้นเรียบร้อยแล้ว</p>
+
+        <div class="break-notice-card">
+          <div class="notice-item">
+            <i class="fa-solid fa-eye-slash text-cyan"></i>
+            <div>
+              <strong>พักสายตาและผ่อนคลาย</strong>
+              <p>กรุณากะพริบตา พักสายตา หรือทำกิจกรรมตามคำแนะนำของผู้ทำการทดลอง</p>
+            </div>
+          </div>
+          <div class="notice-item">
+            <i class="fa-solid fa-circle-check text-green"></i>
+            <div>
+              <strong>เตรียมพร้อมสำหรับช่วงที่ 2</strong>
+              <p>ช่วงต่อไปจะเป็น <strong>Post-test</strong> กติกาเดิม ให้เลือกกดปุ่มสีหมึกตัวอักษรให้เร็วและแม่นยำ</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="break-timer-box">
+          <span class="timer-title"><i class="fa-solid fa-stopwatch"></i> เวลาพัก:</span>
+          <span id="break-timer-display" class="timer-value">00:00</span>
+        </div>
+
+        <div class="break-action-group">
+          <button type="button" id="btn-start-post-round" class="glass-btn primary lg pulse-btn">
+            <i class="fa-solid fa-forward-step"></i> 🚀 พร้อมแล้ว เริ่มช่วงที่ 2 (Post-test) ทันที
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2.9: PARTICIPANT TEST COMPLETED SCREEN (หน้าจอเสร็จสิ้นสำหรับผู้ทดสอบ - ไม่โชว์คะแนน) -->
+    <section id="screen-participant-done" class="screen">
+      <div class="glass-card main-card participant-done-card text-center">
+        <div class="done-check-icon">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h2>การทดสอบเสร็จสมบูรณ์</h2>
+        <p class="subtitle">ระบบได้ทำการบันทึกข้อมูลการทดสอบของท่านเรียบร้อยแล้ว</p>
+
+        <div class="done-info-grid">
+          <div class="done-info-pill">
+            <span class="lbl"><i class="fa-solid fa-user"></i> รหัสผู้ทดสอบ</span>
+            <strong id="done-participant-id">P01</strong>
+          </div>
+          <div class="done-info-pill">
+            <span class="lbl"><i class="fa-solid fa-layer-group"></i> รูปแบบการทดสอบ</span>
+            <span id="done-mode-label">Pre-test ➔ Post-test</span>
+          </div>
+          <div class="done-info-pill">
+            <span class="lbl"><i class="fa-solid fa-calendar-check"></i> วันที่ / เวลา</span>
+            <span id="done-datetime">--</span>
+          </div>
+        </div>
+
+        <div id="done-cloud-status" class="done-cloud-status success">
+          <i class="fa-solid fa-cloud-arrow-up"></i> ข้อมูลถูกบันทึกเรียบร้อยแล้ว
+        </div>
+
+        <div class="done-message-box">
+          <p><i class="fa-solid fa-heart" style="color: #f43f5e;"></i> ขอขอบคุณอย่างยิ่งสำหรับความร่วมมือในการเข้าร่วมการทดลองครั้งนี้</p>
+          <p class="subtext">กรุณาแจ้งผู้ทำการทดลองเพื่อดำเนินการขั้นตอนต่อไป</p>
+        </div>
+
+        <div class="done-actions-row">
+          <button type="button" id="btn-done-download-csv" class="glass-btn success lg">
+            <i class="fa-solid fa-file-arrow-down"></i> ดาวน์โหลดผลการทดสอบนี้ (CSV)
+          </button>
+          <button type="button" id="btn-done-next-participant" class="glass-btn primary lg">
+            <i class="fa-solid fa-user-plus"></i> ผู้ทดสอบคนต่อไป (Next Participant)
+          </button>
+          <button type="button" id="btn-done-admin-view" class="glass-btn secondary sm">
+            <i class="fa-solid fa-lock"></i> ห้องแอดมินสำหรับผู้ทดลอง
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: RESULTS DASHBOARD SCREEN (ห้องแสดงผลละเอียดสำหรับผู้ทำการทดลอง/แอดมิน) -->
     <section id="screen-results" class="screen">
       <div class="glass-card results-card">
         <div class="results-header">
@@ -202,18 +342,67 @@
               <span id="res-session-badge" class="badge-tag session-pre">🔵 Pre-test</span>
             </div>
             <h2>ผลการทดสอบ Stroop Test</h2>
-            <p>ผู้เข้าร่วม: <strong id="res-participant-name">--</strong> | รอบการทดสอบ: <span id="res-session-name" class="highlight">--</span> | วันที่: <span id="res-date-time">--</span> | โหมด: <span id="res-mode-name">--</span></p>
+            <p>ผู้เข้าร่วม: <strong id="res-participant-name">--</strong> | <span id="res-camp-info">ค่าย/กลุ่ม: <strong id="res-camp-name">--</strong> | </span>รอบการทดสอบ: <span id="res-session-name" class="highlight">--</span> | วันที่: <span id="res-date-time">--</span></p>
           </div>
           <div class="results-actions">
-            <button id="btn-export-research-csv" class="glass-btn primary sm" title="ส่งออกตารางสรุป Congruent / Incongruent เป็นไฟล์ Sheet (CSV)">
-              <i class="fa-solid fa-file-excel"></i> ดาวน์โหลด Sheet สรุปผลวิจัย
+            <button id="btn-export-research-csv" class="glass-btn primary sm" title="ส่งออกตารางสรุปผลวิจัยเป็นไฟล์ Sheet เดียว (มีทั้ง Pre, Post, และผลต่าง D)">
+              <i class="fa-solid fa-file-excel"></i> ดาวน์โหลด Sheet สรุปผลวิจัย (ไฟล์เดียวจบ)
             </button>
-            <button id="btn-copy-research-table" class="glass-btn secondary sm" title="คัดลอกตารางสรุป Congruent / Incongruent ไปวางใน Google Sheets (Ctrl+V)">
+            <button id="btn-copy-research-table" class="glass-btn secondary sm" title="คัดลอกตารางสรุปไปวางใน Google Sheets (Ctrl+V)">
               <i class="fa-solid fa-copy"></i> คัดลอกลง Sheet
             </button>
+            <button id="btn-next-participant" class="glass-btn primary sm" title="บันทึกและเริ่มทดสอบผู้เข้าร่วมคนต่อไป (เช่น P02, P03...)">
+              <i class="fa-solid fa-user-plus"></i> ผู้ทดสอบคนต่อไป
+            </button>
             <button id="btn-export-csv" class="glass-btn secondary sm" title="ส่งออกข้อมูลละเอียดรายข้อ (Raw Data)"><i class="fa-solid fa-file-csv"></i> CSV รายข้อ</button>
-            <button id="btn-export-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> JSON</button>
-            <button id="btn-restart" class="glass-btn primary sm"><i class="fa-solid fa-rotate-left"></i> ทดสอบใหม่</button>
+            <button id="btn-restart" class="glass-btn secondary sm"><i class="fa-solid fa-rotate-left"></i> ทดสอบใหม่</button>
+          </div>
+        </div>
+
+        <!-- Pre vs Post Summary Comparison Card (เมื่อทำครบ 2 รอบ) -->
+        <div id="pre-post-summary-card" class="glass-card pre-post-summary-card" style="display: none;">
+          <div class="pre-post-header">
+            <h3><i class="fa-solid fa-chart-pie"></i> สรุปผลเปรียบเทียบ Pre-test vs Post-test (ไฟล์ Sheet เดียวกัน)</h3>
+            <span class="badge-tag success"><i class="fa-solid fa-check-double"></i> ครบ 2 รอบสมบูรณ์</span>
+          </div>
+          <div class="pre-post-grid">
+            <div class="phase-col pre-col">
+              <div class="phase-col-title">🔵 รอบที่ 1: Pre-test (ก่อน)</div>
+              <div class="phase-stat-row">
+                <span>Congruent:</span>
+                <strong id="card-pre-c">-- ms</strong>
+              </div>
+              <div class="phase-stat-row">
+                <span>Incongruent:</span>
+                <strong id="card-pre-i">-- ms</strong>
+              </div>
+              <div class="phase-stat-row highlight-blue">
+                <span>ผลต่าง D = I - C:</span>
+                <strong id="card-pre-d">-- ms</strong>
+              </div>
+            </div>
+
+            <div class="phase-col post-col">
+              <div class="phase-col-title">🟢 รอบที่ 2: Post-test (หลัง)</div>
+              <div class="phase-stat-row">
+                <span>Congruent:</span>
+                <strong id="card-post-c">-- ms</strong>
+              </div>
+              <div class="phase-stat-row">
+                <span>Incongruent:</span>
+                <strong id="card-post-i">-- ms</strong>
+              </div>
+              <div class="phase-stat-row highlight-green">
+                <span>ผลต่าง D = I - C:</span>
+                <strong id="card-post-d">-- ms</strong>
+              </div>
+            </div>
+
+            <div class="phase-col delta-col">
+              <div class="phase-col-title">🟣 ผลต่างการเปลี่ยนแปลง ($\Delta D$)</div>
+              <div class="delta-big-val" id="card-delta-d">-- ms</div>
+              <div class="delta-label" id="card-delta-desc">Post - Pre</div>
+            </div>
           </div>
         </div>
 
@@ -312,33 +501,171 @@
     </section>
   </main>
 
-  <!-- MODAL: PARTICIPANT HISTORY & PRE/POST RESEARCH TABLE -->
-  <div id="modal-history" class="modal">
-    <div class="modal-content glass-card modal-lg">
-      <div class="modal-header">
-        <div>
-          <h2><i class="fa-solid fa-users"></i> สรุปผลการวิจัยและประวัติผู้ทดสอบ</h2>
-          <p class="modal-subtitle">รวบรวมข้อมูล Pre-test & Post-test พร้อมส่งออกไปยัง Google Sheets / Excel</p>
+  <!-- MODAL: ADMIN AUTH (PIN PROMPT) -->
+  <div id="modal-admin-auth" class="modal">
+    <div class="modal-content glass-card auth-card text-center">
+      <div class="modal-header justify-center">
+        <div class="auth-icon-wrap"><i class="fa-solid fa-shield-halved"></i></div>
+      </div>
+      <h2>เข้าสู่ระบบห้องแอดมิน (Admin Portal)</h2>
+      <p class="modal-subtitle">กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบดูข้อมูลผลวิจัยและจัดการ Google Sheets</p>
+      
+      <form id="form-admin-auth" class="auth-form">
+        <div class="input-group">
+          <input type="password" id="admin-pin-input" placeholder="กรอกรหัสผ่าน (เริ่มต้น: admin)" autocomplete="current-password" autofocus>
         </div>
-        <button id="btn-close-modal" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+        <div class="auth-btn-group">
+          <button type="submit" class="glass-btn primary md"><i class="fa-solid fa-unlock-keyhole"></i> เข้าสู่ห้องแอดมิน</button>
+          <button type="button" id="btn-cancel-admin-auth" class="glass-btn secondary md">ยกเลิก</button>
+        </div>
+        <p class="auth-hint"><i class="fa-solid fa-circle-info"></i> รหัสผ่านเริ่มต้นคือ: <code>admin</code> (สำหรับผู้ทำการทดลอง)</p>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADMIN PORTAL & RESEARCH DASHBOARD -->
+  <div id="modal-admin" class="modal">
+    <div class="modal-content glass-card modal-xl">
+      <div class="modal-header">
+        <div class="header-brand-group">
+          <div class="admin-badge"><i class="fa-solid fa-user-shield"></i> Researcher Admin Portal</div>
+          <h2>ห้องแอดมินและศูนย์รวบรวมข้อมูลงานวิจัย Stroop</h2>
+          <p class="modal-subtitle">สรุปผลการทดลอง Pre-test & Post-test • เชื่อมต่อ Google Sheets โดยตรง • ส่งออกข้อมูล</p>
+        </div>
+        <button id="btn-close-admin-modal" class="close-btn" title="ปิดหน้าต่างแอดมิน"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <!-- Tab Switcher between Master Pre/Post Research Table and Individual Sessions -->
-      <div class="modal-tabs">
-        <button id="tab-btn-master" class="tab-btn active"><i class="fa-solid fa-table-columns"></i> ตารางสรุป Pre vs Post รวมทุกคน (สำหรับ Google Sheets)</button>
-        <button id="tab-btn-sessions" class="tab-btn"><i class="fa-solid fa-list-check"></i> รายการบันทึกการทดสอบทั้งหมด (<span id="history-modal-count">0</span>)</button>
+      <!-- Admin Tab Switcher -->
+      <div class="modal-tabs admin-tabs">
+        <button class="tab-btn active" data-tab="tab-admin-image-tables">
+          <i class="fa-solid fa-table"></i> ตารางวิจัย Pre/Post (ตามรูปภาพ)
+        </button>
+        <button class="tab-btn" data-tab="tab-admin-master">
+          <i class="fa-solid fa-table-columns"></i> ตารางเปรียบเทียบ Master (Pre vs Post)
+        </button>
+        <button class="tab-btn" data-tab="tab-admin-sheets">
+          <i class="fa-solid fa-file-excel text-green"></i> ซิงค์ Google Sheets อัตโนมัติ
+        </button>
+        <button class="tab-btn" data-tab="tab-admin-export">
+          <i class="fa-solid fa-cloud-arrow-down"></i> ส่งออกไฟล์ Excel / CSV
+        </button>
+        <button class="tab-btn" data-tab="tab-admin-raw">
+          <i class="fa-solid fa-list-check"></i> ประวัติผู้ทดสอบ & ข้อมูลดิบ (<span id="admin-session-count">0</span>)
+        </button>
+        <button class="tab-btn" data-tab="tab-admin-trials">
+          <i class="fa-solid fa-table-list"></i> Raw Trials (รายข้อ)
+        </button>
       </div>
 
-      <div class="modal-body">
-        <!-- TAB 1: MASTER PRE/POST SUMMARY TABLE -->
-        <div id="tab-pane-master" class="tab-pane active">
+      <div class="modal-body admin-modal-body">
+
+        <!-- TAB 1: RESEARCH TABLES (PRE-TEST & POST-TEST EXACTLY AS IN USER'S IMAGE) -->
+        <div id="tab-admin-image-tables" class="admin-tab-pane active">
+          
+          <div class="research-table-card-group">
+            <!-- PRE-TEST TABLE (ตรงตามรูปภาพของผู้ใช้) -->
+            <div class="glass-card table-subcard pre-subcard">
+              <div class="table-subcard-header">
+                <div>
+                  <span class="badge-tag session-pre"><i class="fa-solid fa-circle-play"></i> รอบที่ 1: Pre-test</span>
+                  <h3>ตารางผลการทดสอบ Pre-test (ก่อนการทดลอง)</h3>
+                  <p class="subcard-desc">ผู้เข้าร่วม | Congruent (ms) | Incongruent (ms) | ผลต่าง D = I - C</p>
+                </div>
+                <div class="subcard-actions">
+                  <button type="button" id="btn-copy-pre-table" class="glass-btn primary sm" title="คัดลอกตาราง Pre-test ไปวางใน Google Sheets">
+                    <i class="fa-solid fa-copy"></i> คัดลอกตาราง Pre ลง Sheet
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="research-standard-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 25%;">ผู้เข้าร่วม</th>
+                      <th style="width: 25%;">Congruent (ms)</th>
+                      <th style="width: 25%;">Incongruent (ms)</th>
+                      <th style="width: 25%;">ผลต่าง $D = I - C$</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pre-research-table-body">
+                    <!-- Populated via JavaScript -->
+                  </tbody>
+                  <tfoot id="pre-research-table-foot">
+                    <!-- Mean row -->
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+
+            <!-- POST-TEST TABLE (ตรงตามรูปภาพของผู้ใช้) -->
+            <div class="glass-card table-subcard post-subcard">
+              <div class="table-subcard-header">
+                <div>
+                  <span class="badge-tag session-post"><i class="fa-solid fa-circle-check"></i> รอบที่ 2: Post-test</span>
+                  <h3>ตารางผลการทดสอบ Post-test (หลังการทดลอง)</h3>
+                  <p class="subcard-desc">ผู้เข้าร่วม | Congruent (ms) | Incongruent (ms) | ผลต่าง D = I - C</p>
+                </div>
+                <div class="subcard-actions">
+                  <button type="button" id="btn-copy-post-table" class="glass-btn primary sm" title="คัดลอกตาราง Post-test ไปวางใน Google Sheets">
+                    <i class="fa-solid fa-copy"></i> คัดลอกตาราง Post ลง Sheet
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="research-standard-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 25%;">ผู้เข้าร่วม</th>
+                      <th style="width: 25%;">Congruent (ms)</th>
+                      <th style="width: 25%;">Incongruent (ms)</th>
+                      <th style="width: 25%;">ผลต่าง $D = I - C$</th>
+                    </tr>
+                  </thead>
+                  <tbody id="post-research-table-body">
+                    <!-- Populated via JavaScript -->
+                  </tbody>
+                  <tfoot id="post-research-table-foot">
+                    <!-- Mean row -->
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sample Data Load Strip -->
+          <div class="copy-all-strip glass-card" style="border-color: rgba(251,191,36,0.25); background: rgba(251,191,36,0.05);">
+            <div>
+              <strong><i class="fa-solid fa-flask text-yellow"></i> โหลดข้อมูลตัวอย่าง (Demo Data P01–P05)</strong>
+              <p>ใส่ข้อมูลตัวอย่างจากรูปแบบเดิม (P01–P05) เข้าสู่ระบบทันที เพื่อทดสอบตาราง หรือใช้เป็น Template ก่อนทดลองจริง</p>
+            </div>
+            <button type="button" id="btn-load-sample-data" class="glass-btn warning md">
+              <i class="fa-solid fa-database"></i> โหลดข้อมูลตัวอย่าง P01–P05
+            </button>
+          </div>
+
+          <!-- Quick Copy All Button -->
+          <div class="copy-all-strip glass-card">
+            <div>
+              <strong><i class="fa-solid fa-paste text-green"></i> คัดลอกข้อมูลทั้ง Pre และ Post ไปวางใน Google Sheets ทีเดียว</strong>
+              <p>สามารถเปิด Google Sheet ว่างๆ แล้วกดปุ่มนี้ ➔ ไปที่ชีตแล้วกด <code>Ctrl + V</code> ข้อมูลจะลงตารางทันที</p>
+            </div>
+            <button type="button" id="btn-copy-both-tables" class="glass-btn primary md">
+              <i class="fa-solid fa-copy"></i> คัดลอกข้อมูลทั้งหมดลง Sheet (Ctrl+V)
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 2: MASTER PRE VS POST COMPARISON TABLE -->
+        <div id="tab-admin-master" class="admin-tab-pane">
           <div class="master-export-card">
             <div class="master-export-info">
               <h4><i class="fa-solid fa-clipboard-check"></i> ตารางเปรียบเทียบ Pre-test และ Post-test รวมผู้เข้าร่วมทุกคน</h4>
-              <p>ผู้เข้าร่วม | Pre [C, I, D] | Post [C, I, D] | ผลต่าง Post - Pre (เฉพาะข้อที่ตอบถูก)</p>
+              <p>ผู้เข้าร่วม | Pre [C, I, D] | Post [C, I, D] | ผลต่าง $\Delta D = Post - Pre$ (เฉพาะข้อที่ตอบถูก)</p>
             </div>
             <div class="master-export-btns">
-              <button id="btn-copy-master-table" class="glass-btn primary sm"><i class="fa-solid fa-copy"></i> คัดลอกตารางไปวางใน Google Sheets (Ctrl+V)</button>
+              <button id="btn-copy-master-table" class="glass-btn primary sm"><i class="fa-solid fa-copy"></i> คัดลอกตาราง Master ลง Google Sheets (Ctrl+V)</button>
               <button id="btn-export-master-summary-csv" class="glass-btn secondary sm"><i class="fa-solid fa-file-csv"></i> ดาวน์โหลด CSV สรุปผลวิจัย</button>
             </div>
           </div>
@@ -367,40 +694,139 @@
               </tbody>
             </table>
           </div>
+        </div>
 
-          <!-- Formula Helper Accordion -->
-          <div class="sheet-formula-guide">
-            <div class="guide-header">
-              <i class="fa-solid fa-lightbulb" style="color: #facc15;"></i>
-              <strong>คำแนะนำสูตร Google Sheets (กรณีนำไฟล์ CSV ข้อต่อข้อไปวางในชีต):</strong>
+        <!-- TAB 3: GOOGLE SHEETS AUTOMATION (NO DATABASE REQUIRED) -->
+        <div id="tab-admin-sheets" class="admin-tab-pane">
+          <div class="sheets-integration-card glass-card">
+            <div class="integration-header">
+              <div class="icon-circle"><i class="fa-solid fa-file-excel"></i></div>
+              <div>
+                <h3>การเชื่อมต่อ Google Sheets แบบอัตโนมัติ (Google Apps Script Web App)</h3>
+                <p>วิธีที่ง่ายที่สุด สะดวกที่สุด และไม่ต้องติดตั้ง Database หรือ Server เสียค่าใช้จ่ายใดๆ ทั้งสิ้น</p>
+              </div>
             </div>
-            <div class="formula-chips">
-              <div class="formula-item">
-                <span class="formula-lbl">สูตรหา Congruent (ms) เฉพาะข้อที่ตอบถูก:</span>
-                <code>=ROUND(AVERAGEIFS(I7:I21, J7:J21, "Yes", G7:G21, "Correct"), 0)</code>
+
+            <div class="webhook-config-box">
+              <label for="google-sheets-url-input"><i class="fa-solid fa-link"></i> Google Apps Script Web App URL:</label>
+              <div class="input-with-button">
+                <input type="url" id="google-sheets-url-input" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+                <button type="button" id="btn-save-sheets-url" class="glass-btn primary sm"><i class="fa-solid fa-floppy-disk"></i> บันทึก URL</button>
               </div>
-              <div class="formula-item">
-                <span class="formula-lbl">สูตรหา Incongruent (ms) เฉพาะข้อที่ตอบถูก:</span>
-                <code>=ROUND(AVERAGEIFS(I7:I21, J7:J21, "No", G7:G21, "Correct"), 0)</code>
+              <div class="webhook-status-row">
+                <span id="webhook-status-badge" class="badge-tag warning"><i class="fa-solid fa-circle-exclamation"></i> ยังไม่ได้เชื่อมต่อ URL</span>
+                <span class="status-hint">*บันทึกไว้ในเบราว์เซอร์อัตโนมัติ ทุกครั้งที่มีการทดสอบจบ ข้อมูลจะถูกยิงเข้า Google Sheet ทันที</span>
               </div>
-              <div class="formula-item">
-                <span class="formula-lbl">สูตรหาผลต่าง D = I - C:</span>
-                <code>=Cell_Incongruent - Cell_Congruent</code>
+            </div>
+
+            <div class="integration-actions-row">
+              <button type="button" id="btn-sync-all-sheets" class="glass-btn primary md">
+                <i class="fa-solid fa-cloud-arrow-up"></i> ส่งข้อมูลผู้เข้าร่วมทั้งหมดเข้า Google Sheet ทันที (Sync All)
+              </button>
+              <button type="button" id="btn-test-sheets-connection" class="glass-btn secondary md">
+                <i class="fa-solid fa-vial"></i> ทดสอบส่งข้อมูลตัวอย่าง (Test Connection)
+              </button>
+            </div>
+
+            <!-- 3-Step Setup Instructions -->
+            <div class="sheets-guide-box">
+              <h4><i class="fa-solid fa-circle-question"></i> วิธีเปิดใช้งาน Google Apps Script (ทำเพียงครั้งเดียว ภายใน 2 นาที):</h4>
+              <ol class="setup-steps-list">
+                <li>
+                  <strong>สร้าง Google Sheet ใหม่</strong> ➔ ตั้งชื่อว่า <code>Stroop_Research_Data</code>
+                </li>
+                <li>
+                  ไปที่เมนู <strong>ส่วนขยาย (Extensions)</strong> ➔ เลือก <strong>Apps Script</strong>
+                </li>
+                <li>
+                  ลบโค้ดเดิมออกทั้งหมด แล้ววางโค้ดด้านล่างนี้ลงไป:
+                  <div class="code-copy-wrapper">
+                    <pre><code id="apps-script-code-block">function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('Stroop_Data') || ss.getActiveSheet();
+  var payload = JSON.parse(e.postData.contents);
+  
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow([
+      'วันที่/เวลา', 'ผู้เข้าร่วม', 
+      'Pre Congruent (ms)', 'Pre Incongruent (ms)', 'Pre ผลต่าง D (ms)',
+      'Post Congruent (ms)', 'Post Incongruent (ms)', 'Post ผลต่าง D (ms)',
+      'ผลต่าง Delta D (Post - Pre)', 'Pre ความถูกต้อง', 'Post ความถูกต้อง'
+    ]);
+  }
+  
+  if (payload.action === 'add_record' && payload.record) {
+    var r = payload.record;
+    sheet.appendRow([
+      r.dateTimeStr || new Date().toLocaleString('th-TH'),
+      r.participantName,
+      r.preCongMs, r.preIncongMs, r.preDiffD,
+      r.postCongMs, r.postIncongMs, r.postDiffD,
+      r.deltaD,
+      r.preAccuracy + '%', r.postAccuracy + '%'
+    ]);
+  } else if (payload.action === 'sync_all' && payload.records) {
+    payload.records.forEach(function(r) {
+      sheet.appendRow([
+        r.dateTimeStr || new Date().toLocaleString('th-TH'),
+        r.participantName,
+        r.preCongMs, r.preIncongMs, r.preDiffD,
+        r.postCongMs, r.postIncongMs, r.postDiffD,
+        r.deltaD,
+        r.preAccuracy + '%', r.postAccuracy + '%'
+      ]);
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
+    .setMimeType(ContentService.MimeType.JSON);
+}</code></pre>
+                    <button type="button" id="btn-copy-apps-script-code" class="glass-btn secondary sm">
+                      <i class="fa-solid fa-copy"></i> คัดลอกโค้ด Apps Script
+                    </button>
+                  </div>
+                </li>
+                <li>
+                  กดปุ่ม <strong>ทำให้ใช้งานได้ (Deploy)</strong> มุมบนขวา ➔ เลือก <strong>การทำให้ใช้งานได้ใหม่ (New deployment)</strong> ➔ เลือกประเภทเป็น <strong>เว็บแอป (Web app)</strong> ➔ ในช่อง <em>"ผู้มีสิทธิ์เข้าถึง (Who has access)"</em> ให้เลือกเป็น <strong>"ทุกคน (Anyone)"</strong> ➔ กด Deploy แล้วนำ URL ที่ได้มาวางในช่องด้านบน!
+                </li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: FILE EXPORT -->
+        <div id="tab-admin-export" class="admin-tab-pane">
+          <div class="export-options-grid">
+            <div class="export-card glass-card">
+              <div class="export-icon text-green"><i class="fa-solid fa-file-excel"></i></div>
+              <h3>ดาวน์โหลด Excel (.xlsx / .csv) สรุปผลวิจัย</h3>
+              <p>มีครบทั้งตาราง Pre-test, ตาราง Post-test และตารางเปรียบเทียบ Master รวมสูตรคำนวณ</p>
+              <div class="export-btn-group">
+                <button type="button" id="btn-download-master-csv" class="glass-btn primary sm"><i class="fa-solid fa-download"></i> ดาวน์โหลด CSV สรุปผลวิจัย</button>
+              </div>
+            </div>
+
+            <div class="export-card glass-card">
+              <div class="export-icon text-blue"><i class="fa-solid fa-table-list"></i></div>
+              <h3>ส่งออกข้อมูลดิบรายข้อ (Master Raw Trials)</h3>
+              <p>รวมบันทึกคำตอบ เวลาปฏิกิริยา และสถานะของทุกข้อ สำหรับวิเคราะห์ต่อใน SPSS หรือ Python</p>
+              <div class="export-btn-group">
+                <button type="button" id="btn-export-all-csv" class="glass-btn secondary sm"><i class="fa-solid fa-file-csv"></i> ดาวน์โหลด Raw Trials CSV</button>
+                <button type="button" id="btn-export-all-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> ดาวน์โหลด Raw JSON</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- TAB 2: INDIVIDUAL SESSIONS LOG -->
-        <div id="tab-pane-sessions" class="tab-pane">
+        <!-- TAB 5: SESSIONS LOG & DATA MANAGEMENT -->
+        <div id="tab-admin-raw" class="admin-tab-pane">
           <div class="master-export-card">
             <div class="master-export-info">
-              <h4><i class="fa-solid fa-database"></i> ส่งออกข้อมูลดิบรวมทุกคน (Master Raw Trials)</h4>
-              <p>รวมบันทึกข้อต่อข้อของผู้ทดสอบทุกคนในระบบเป็นไฟล์เดียวสำหรับ SPSS / Python</p>
+              <h4><i class="fa-solid fa-database"></i> รายการประวัติการทำแบบทดสอบทั้งหมด</h4>
+              <p>ดูรายละเอียดผลคะแนนรายคน หรือลบรายการที่ไม่ต้องการ</p>
             </div>
             <div class="master-export-btns">
-              <button id="btn-export-all-csv" class="glass-btn primary sm"><i class="fa-solid fa-file-csv"></i> CSV รายข้อรวมทุกคน</button>
-              <button id="btn-export-all-json" class="glass-btn secondary sm"><i class="fa-solid fa-file-code"></i> JSON รวมทุกคน</button>
+              <button id="btn-clear-history" class="glass-btn danger sm"><i class="fa-solid fa-trash-can"></i> ลบประวัติทั้งหมด</button>
             </div>
           </div>
 
@@ -424,15 +850,61 @@
             </table>
           </div>
         </div>
+
+        <!-- TAB 6: RAW TRIALS TABLE (Trial, Condition, Prompt Text, Ink Color...) -->
+        <div id="tab-admin-trials" class="admin-tab-pane">
+          <div class="master-export-card">
+            <div class="master-export-info">
+              <h4><i class="fa-solid fa-table-list"></i> ข้อมูลดิบรายข้อ (Raw Trials)</h4>
+              <p>Trial · Condition · Prompt Text · Ink Color · User Answer · Correct Answer · Status · Reaction Time (s) · Reaction Time (ms) · Is Congruent</p>
+            </div>
+            <div class="master-export-btns" style="gap:0.5rem; flex-wrap:wrap;">
+              <select id="raw-trial-participant-filter" class="form-select sm" style="min-width:140px; padding:0.45rem 0.75rem; font-size:0.85rem; border-radius:var(--radius-md); border:1px solid var(--border-glass); background:var(--bg-surface); color:var(--text-main);">
+                <option value="ALL">ทุกคน</option>
+              </select>
+              <select id="raw-trial-phase-filter" class="form-select sm" style="min-width:130px; padding:0.45rem 0.75rem; font-size:0.85rem; border-radius:var(--radius-md); border:1px solid var(--border-glass); background:var(--bg-surface); color:var(--text-main);">
+                <option value="ALL">ทั้ง Pre &amp; Post</option>
+                <option value="PRE">Pre-test เท่านั้น</option>
+                <option value="POST">Post-test เท่านั้น</option>
+              </select>
+              <button id="btn-copy-raw-trials" class="glass-btn primary sm"><i class="fa-solid fa-copy"></i> คัดลอก TSV ลง Sheet</button>
+              <button id="btn-download-raw-trials-csv" class="glass-btn secondary sm"><i class="fa-solid fa-file-csv"></i> ดาวน์โหลด CSV</button>
+            </div>
+          </div>
+
+          <div class="table-container" style="overflow-x:auto; max-height:480px; overflow-y:auto;">
+            <table class="research-standard-table" style="min-width:900px; font-size:0.82rem;">
+              <thead style="position:sticky; top:0; z-index:2;">
+                <tr>
+                  <th style="width:55px;">Trial</th>
+                  <th style="width:80px;">Participant</th>
+                  <th style="width:80px;">Phase</th>
+                  <th style="width:55px;">Condition</th>
+                  <th>Prompt Text</th>
+                  <th>Ink Color</th>
+                  <th>User Answer</th>
+                  <th>Correct Answer</th>
+                  <th style="width:80px;">Status</th>
+                  <th style="width:85px;">RT (s)</th>
+                  <th style="width:85px;">RT (ms)</th>
+                  <th style="width:90px;">Is Congruent</th>
+                </tr>
+              </thead>
+              <tbody id="raw-trials-table-body">
+                <!-- Populated via JS -->
+              </tbody>
+            </table>
+          </div>
+          <div id="raw-trials-summary-bar" style="margin-top:0.75rem; font-size:0.82rem; color:var(--text-muted); text-align:right;"></div>
+        </div>
+
       </div>
 
       <div class="modal-footer">
-        <button id="btn-clear-history" class="glass-btn danger sm"><i class="fa-solid fa-trash-can"></i> ลบประวัติทั้งหมด</button>
+        <button id="btn-close-admin-footer" class="glass-btn secondary sm"><i class="fa-solid fa-xmark"></i> ปิดหน้าต่าง</button>
       </div>
     </div>
   </div>
-
-
 
   <!-- MODAL: PRACTICE COMPLETE -->
   <div id="modal-practice-complete" class="modal">
