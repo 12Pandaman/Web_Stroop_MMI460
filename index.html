@@ -150,16 +150,57 @@
             </div>
           </div>
 
-          <div class="input-group">
-            <label for="time-limit-select"><i class="fa-solid fa-clock"></i> จำกัดเวลาตอบต่อข้อ (Time Limit)</label>
+          <div class="input-group time-limit-group">
+            <div class="time-limit-label-row">
+              <label for="time-limit-select"><i class="fa-solid fa-clock"></i> จำกัดเวลาตอบต่อข้อ (Time Limit)</label>
+              <button type="button" id="btn-toggle-custom-time" class="btn-toggle-custom" title="เปิด/ปิด แผงปรับเวลาละเอียด">
+                <i class="fa-solid fa-sliders"></i> <span>ปรับเวลาละเอียด</span>
+              </button>
+            </div>
             <select id="time-limit-select">
-              <option value="4" selected>4.0 วินาที (แนะนำมาตรฐานวิจัย)</option>
-              <option value="3">3.0 วินาที (เข้มงวด - Fast Pace)</option>
-              <option value="5">5.0 วินาที (ผ่อนคลาย - Relaxed)</option>
-              <option value="1">1.0 วินาที (เร็วมาก - Very Fast)</option>
               <option value="0.5">0.5 วินาที (เร็วสุด - Ultra Fast)</option>
+              <option value="1">1.0 วินาที (เร็วมาก - Fast Pace)</option>
+              <option value="1.5" selected>1.5 วินาที (แนะนำ - 1.5s)</option>
+              <option value="2">2.0 วินาที (ปานกลาง - 2.0s)</option>
+              <option value="3">3.0 วินาที (เข้มงวด - 3.0s)</option>
+              <option value="4">4.0 วินาที (มาตรฐานวิจัยเดิม - 4.0s)</option>
+              <option value="5">5.0 วินาที (ผ่อนคลาย - Relaxed)</option>
               <option value="0">ไม่จำกัดเวลา (Unlimited)</option>
+              <option value="custom">⚙️ กำหนดเวลาเอง... (ปรับละเอียด เช่น 1.5, 1.6 วินาที)</option>
             </select>
+
+            <!-- แผงปรับแต่งเวลาละเอียดแบบ Custom (ปรับได้ทีละ 0.1 หรือกรอก เช่น 1.5, 1.6) -->
+            <div id="custom-time-panel" class="custom-time-panel" style="display: none;">
+              <div class="custom-time-panel-inner">
+                <div class="custom-time-controls">
+                  <span class="custom-time-title"><i class="fa-solid fa-stopwatch-20"></i> ระบุเวลาที่ต้องการ:</span>
+                  <div class="stepper-box">
+                    <button type="button" id="btn-time-minus" class="stepper-btn" title="ลดลง 0.1 วินาที">
+                      <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <input type="number" id="custom-time-input" min="0.1" max="60" step="0.1" value="1.5" placeholder="1.5">
+                    <span class="stepper-unit">วินาที</span>
+                    <button type="button" id="btn-time-plus" class="stepper-btn" title="เพิ่มขึ้น 0.1 วินาที">
+                      <i class="fa-solid fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="custom-presets-wrap">
+                  <span class="presets-caption"><i class="fa-solid fa-bolt"></i> ตัวเลือกเริ่มต้น (Default Presets):</span>
+                  <div class="presets-chips">
+                    <button type="button" class="preset-chip" data-time="0.5">0.5s</button>
+                    <button type="button" class="preset-chip" data-time="1">1.0s</button>
+                    <button type="button" class="preset-chip active" data-time="1.5">1.5s</button>
+                    <button type="button" class="preset-chip" data-time="1.6">1.6s</button>
+                    <button type="button" class="preset-chip" data-time="2">2.0s</button>
+                  </div>
+                </div>
+                <div class="custom-time-help">
+                  <i class="fa-solid fa-circle-info"></i> ปรับเวลาละเอียดได้ทีละ 0.1 วินาที (เช่น <strong>1.5</strong>, <strong>1.6</strong> วินาที) หรือพิมพ์ตัวเลขได้ทันที
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="input-group">

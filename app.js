@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let postSessionStats = null;
   let totalTrialCount = 15;
   let selectedConditionMode = 'ALL_MIXED';
-  let trialTimeLimitSec = 4;
+  let trialTimeLimitSec = 1.5;
   let timeLimitTimer = null;
   let stimulusHideTimer = null;
   let currentTrialIndex = 0;
@@ -125,6 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const trialCountSelect = document.getElementById('trial-count-select');
   const conditionModeSelect = document.getElementById('condition-mode-select');
   const timeLimitSelect = document.getElementById('time-limit-select');
+  const btnToggleCustomTime = document.getElementById('btn-toggle-custom-time');
+  const customTimePanel = document.getElementById('custom-time-panel');
+  const customTimeInput = document.getElementById('custom-time-input');
+  const btnTimeMinus = document.getElementById('btn-time-minus');
+  const btnTimePlus = document.getElementById('btn-time-plus');
+  const presetChips = document.querySelectorAll('.preset-chip');
   const stimulusDurationSelect = document.getElementById('stimulus-duration-select');
 
   // Test Arena
@@ -254,9 +260,187 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function initApp() {
     initTheme();
+    initTimeLimitControls();
     loadSheetsWebhookUrl();
     updateRecordCounts();
     attachEventListeners();
+  }
+
+  // --- TIME LIMIT & CUSTOM TIME CONTROLS ---
+  function getSelectedTimeLimit() {
+    if (!timeLimitSelect) return 1.5;
+    if (timeLimitSelect.value === 'custom') {
+      if (customTimeInput) {
+        const val = parseFloat(customTimeInput.value);
+        if (!isNaN(val) && val > 0) {
+          return val;
+        }
+      }
+      return 1.5;
+    }
+    const parsed = parseFloat(timeLimitSelect.value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+
+  function initTimeLimitControls() {
+    const savedTimeLimit = localStorage.getItem('stroop_time_limit_pref');
+    const savedCustomVal = localStorage.getItem('stroop_custom_time_val') || '1.5';
+
+    if (customTimeInput) {
+      customTimeInput.value = savedCustomVal;
+    }
+
+    if (savedTimeLimit && timeLimitSelect) {
+      let optionExists = false;
+      for (let i = 0; i < timeLimitSelect.options.length; i++) {
+        if (timeLimitSelect.options[i].value === savedTimeLimit) {
+          optionExists = true;
+          break;
+        }
+      }
+      if (optionExists) {
+        timeLimitSelect.value = savedTimeLimit;
+      } else {
+        timeLimitSelect.value = 'custom';
+        if (customTimeInput) customTimeInput.value = savedTimeLimit;
+        updateCustomSelectLabel(savedTimeLimit);
+      }
+    }
+
+    syncCustomTimeUI();
+
+    if (timeLimitSelect) {
+      timeLimitSelect.addEventListener('change', () => {
+        if (timeLimitSelect.value === 'custom') {
+          showCustomTimePanel(true);
+          const currentVal = parseFloat(customTimeInput?.value) || 1.5;
+          updateCustomSelectLabel(currentVal);
+          localStorage.setItem('stroop_time_limit_pref', 'custom');
+          localStorage.setItem('stroop_custom_time_val', String(currentVal));
+        } else {
+          showCustomTimePanel(false);
+          const val = timeLimitSelect.value;
+          localStorage.setItem('stroop_time_limit_pref', val);
+          if (customTimeInput && val !== '0') {
+            customTimeInput.value = val;
+            localStorage.setItem('stroop_custom_time_val', val);
+          }
+        }
+        updateActivePresetChip(timeLimitSelect.value === 'custom' ? customTimeInput?.value : timeLimitSelect.value);
+      });
+    }
+
+    if (btnToggleCustomTime) {
+      btnToggleCustomTime.addEventListener('click', () => {
+        const isShown = customTimePanel && customTimePanel.style.display !== 'none';
+        showCustomTimePanel(!isShown);
+        if (!isShown) {
+          timeLimitSelect.value = 'custom';
+          const currentVal = parseFloat(customTimeInput?.value) || 1.5;
+          updateCustomSelectLabel(currentVal);
+          localStorage.setItem('stroop_time_limit_pref', 'custom');
+        }
+      });
+    }
+
+    if (btnTimeMinus) {
+      btnTimeMinus.addEventListener('click', () => {
+        adjustCustomTime(-0.1);
+      });
+    }
+
+    if (btnTimePlus) {
+      btnTimePlus.addEventListener('click', () => {
+        adjustCustomTime(0.1);
+      });
+    }
+
+    if (customTimeInput) {
+      customTimeInput.addEventListener('input', () => {
+        let val = parseFloat(customTimeInput.value);
+        if (isNaN(val) || val <= 0) val = 0.5;
+        val = Math.round(val * 10) / 10;
+        timeLimitSelect.value = 'custom';
+        updateCustomSelectLabel(val);
+        updateActivePresetChip(val);
+        localStorage.setItem('stroop_time_limit_pref', 'custom');
+        localStorage.setItem('stroop_custom_time_val', String(val));
+      });
+    }
+
+    presetChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        const tVal = chip.dataset.time;
+        if (customTimeInput) customTimeInput.value = tVal;
+
+        let matched = false;
+        for (let i = 0; i < timeLimitSelect.options.length; i++) {
+          if (timeLimitSelect.options[i].value === tVal) {
+            timeLimitSelect.value = tVal;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          timeLimitSelect.value = 'custom';
+          updateCustomSelectLabel(tVal);
+          localStorage.setItem('stroop_time_limit_pref', 'custom');
+        } else {
+          localStorage.setItem('stroop_time_limit_pref', tVal);
+        }
+        localStorage.setItem('stroop_custom_time_val', tVal);
+        updateActivePresetChip(tVal);
+      });
+    });
+  }
+
+  function showCustomTimePanel(show) {
+    if (customTimePanel) {
+      customTimePanel.style.display = show ? 'block' : 'none';
+    }
+    if (btnToggleCustomTime) {
+      btnToggleCustomTime.classList.toggle('active', show);
+    }
+  }
+
+  function adjustCustomTime(delta) {
+    if (!customTimeInput) return;
+    let current = parseFloat(customTimeInput.value) || 1.5;
+    let nextVal = Math.round((current + delta) * 10) / 10;
+    if (nextVal < 0.2) nextVal = 0.2;
+    if (nextVal > 60) nextVal = 60;
+    customTimeInput.value = nextVal.toFixed(1);
+    timeLimitSelect.value = 'custom';
+    updateCustomSelectLabel(nextVal);
+    updateActivePresetChip(nextVal);
+    localStorage.setItem('stroop_time_limit_pref', 'custom');
+    localStorage.setItem('stroop_custom_time_val', String(nextVal));
+  }
+
+  function updateCustomSelectLabel(val) {
+    const customOpt = timeLimitSelect?.querySelector('option[value="custom"]');
+    if (customOpt) {
+      customOpt.textContent = `⚙️ กำหนดเวลาเอง (${Number(val).toFixed(1)} วินาที)`;
+    }
+  }
+
+  function updateActivePresetChip(val) {
+    const numVal = parseFloat(val);
+    presetChips.forEach(chip => {
+      const chipVal = parseFloat(chip.dataset.time);
+      chip.classList.toggle('active', Math.abs(chipVal - numVal) < 0.05);
+    });
+  }
+
+  function syncCustomTimeUI() {
+    if (!timeLimitSelect) return;
+    const isCustom = timeLimitSelect.value === 'custom';
+    showCustomTimePanel(isCustom);
+    const curVal = isCustom ? (customTimeInput?.value || '1.5') : timeLimitSelect.value;
+    updateActivePresetChip(curVal);
+    if (isCustom && customTimeInput) {
+      updateCustomSelectLabel(customTimeInput.value);
+    }
   }
 
   function initTheme() {
@@ -532,7 +716,7 @@ document.addEventListener('DOMContentLoaded', () => {
     postSessionStats = null;
     totalTrialCount = parseInt(trialCountSelect.value, 10) || 15;
     selectedConditionMode = conditionModeSelect.value;
-    trialTimeLimitSec = parseFloat(timeLimitSelect ? timeLimitSelect.value : '4');
+    trialTimeLimitSec = getSelectedTimeLimit();
 
     trialList = generateTrials(totalTrialCount, selectedConditionMode);
     currentTrialIndex = 0;
@@ -548,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isPracticeMode = true;
     practiceTrialIndex = 0;
     currentParticipantName = participantNameInput.value.trim() || 'ผู้ทดสอบ (ซ้อมทำ)';
-    trialTimeLimitSec = parseFloat(timeLimitSelect ? timeLimitSelect.value : '4');
+    trialTimeLimitSec = getSelectedTimeLimit();
 
     switchScreen(screenTest);
     runCountdown('PRACTICE', () => {
