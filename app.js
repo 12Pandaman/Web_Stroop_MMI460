@@ -1,4 +1,4 @@
-﻿/******************************************************************************
+/******************************************************************************
  * Stroop Test Pro - Core Application Logic
  * Supports:
  * 1. Single-click Flow: Pre-test ➔ Break / Rest ➔ Post-test
@@ -80,6 +80,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentSessionPhase = 'PRE'; // 'PRE' or 'POST'
   let preSessionResponses = [];
   let preSessionStats = null;
+  let postSessionResponses = [];
+  let postSessionStats = null;
   let totalTrialCount = 15;
   let selectedConditionMode = 'ALL_MIXED';
   let trialTimeLimitSec = 4;
@@ -151,10 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const doneModeLabel = document.getElementById('done-mode-label');
   const doneDatetime = document.getElementById('done-datetime');
   const doneCloudStatus = document.getElementById('done-cloud-status');
+  const btnDoneViewResults = document.getElementById('btn-done-view-results');
   const btnDoneNextParticipant = document.getElementById('btn-done-next-participant');
   const btnDoneAdminView = document.getElementById('btn-done-admin-view');
   const btnDoneDownloadCsv = document.getElementById('btn-done-download-csv');
   const autoDownloadCsvCheckbox = document.getElementById('auto-download-csv-checkbox');
+  const btnBackToDone = document.getElementById('btn-back-to-done');
 
   // Header Elements
   const btnThemeToggle = document.getElementById('btn-theme-toggle');
@@ -299,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnStartPostRound) btnStartPostRound.addEventListener('click', startPostRound);
 
     // Participant Done Screen Buttons
+    if (btnDoneViewResults) btnDoneViewResults.addEventListener('click', handleViewResultsFromDone);
     if (btnDoneDownloadCsv) btnDoneDownloadCsv.addEventListener('click', downloadCurrentParticipantCSV);
     if (btnDoneNextParticipant) btnDoneNextParticipant.addEventListener('click', handleNextParticipant);
     if (btnDoneAdminView) btnDoneAdminView.addEventListener('click', openAdminPortal);
@@ -384,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rawTrialPhaseFilter) rawTrialPhaseFilter.addEventListener('change', renderRawTrialsTable);
 
     // Results Dashboard Buttons
+    if (btnBackToDone) btnBackToDone.addEventListener('click', () => switchScreen(screenParticipantDone));
     if (btnRestart) btnRestart.addEventListener('click', () => switchScreen(screenStart));
     if (btnNextParticipant) btnNextParticipant.addEventListener('click', handleNextParticipant);
     if (btnExportResearchCsv) btnExportResearchCsv.addEventListener('click', () => exportSingleSessionResearchCSV(currentSessionData));
@@ -522,6 +528,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     preSessionResponses = [];
     preSessionStats = null;
+    postSessionResponses = [];
+    postSessionStats = null;
     totalTrialCount = parseInt(trialCountSelect.value, 10) || 15;
     selectedConditionMode = conditionModeSelect.value;
     trialTimeLimitSec = parseFloat(timeLimitSelect ? timeLimitSelect.value : '4');
@@ -809,8 +817,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // IF FINISHED POST-TEST (OR SINGLE RUN COMPLETED):
-    const postSessionResponses = [...userResponses];
-    const postSessionStats = calculatePhaseStats(postSessionResponses);
+    postSessionResponses = [...userResponses];
+    postSessionStats = calculatePhaseStats(postSessionResponses);
 
     const nowStr = getFormattedDate();
 
@@ -973,6 +981,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function handleViewResultsFromDone() {
+    try {
+      // 1. If currentSessionData is populated and has trials
+      if (currentSessionData && currentSessionData.responses && currentSessionData.responses.length > 0) {
+        loadDetailedResultView(currentSessionData);
+        return;
+      }
+
+      // 2. If userResponses in current memory is available
+      if (userResponses && userResponses.length > 0) {
+        const stats = calculatePhaseStats(userResponses);
+        loadDetailedResultView({
+          participantName: currentParticipantName,
+          campName: currentCampName,
+          sessionPhase: currentSessionPhase,
+          phaseLabel: isAutoPrePostMode ? 'Pre-test ➔ Post-test' : (currentSessionPhase === 'POST' ? 'Post-test' : 'Pre-test'),
+          modeName: selectedConditionMode,
+          dateTimeStr: getFormattedDate(),
+          ...stats,
+          responses: userResponses
+        });
+        return;
+      }
+
+      // 3. Fallback: Lookup latest matching session from localStorage
+      const sessions = getIndividualSessions();
+      if (sessions && sessions.length > 0) {
+        const mySession = [...sessions].reverse().find(s => s.participantName === currentParticipantName) || sessions[sessions.length - 1];
+        if (mySession) {
+          loadDetailedResultView(mySession);
+          return;
+        }
+      }
+
+      // 4. Fallback: Lookup from research master records
+      const records = getResearchRecords();
+      if (records && records.length > 0) {
+        const rec = [...records].reverse().find(r => r.participantName === currentParticipantName) || records[records.length - 1];
+        if (rec) {
+          const isPost = rec.postAccuracy !== '-' && rec.postAccuracy !== undefined;
+          const dummySession = {
+            participantName: rec.participantName,
+            campName: rec.campName,
+            dateTimeStr: rec.dateTimeStr,
+            modeName: rec.modeName,
+            sessionPhase: isPost ? 'POST' : 'PRE',
+            phaseLabel: isPost ? 'Post-test' : 'Pre-test',
+            accuracyPct: isPost ? rec.postAccuracy : rec.preAccuracy,
+            correctCount: '-',
+            totalCount: '-',
+            avgRtSec: isPost && rec.postCongMs !== '-' ? ((Number(rec.postCongMs) + Number(rec.postIncongMs)) / 2000).toFixed(3) : '0.000',
+            avgRtMs: isPost && rec.postCongMs !== '-' ? Math.round((Number(rec.postCongMs) + Number(rec.postIncongMs)) / 2) : 0,
+            fastestRtSec: '-',
+            slowestRtSec: '-',
+            diffD: isPost ? rec.postDiffD : (rec.preDiffD || 0),
+            responses: (rec.postResponses && rec.postResponses.length > 0) ? rec.postResponses : (rec.preResponses || [])
+          };
+          loadDetailedResultView(dummySession);
+          return;
+        }
+      }
+
+      alert('ยังไม่พบข้อมูลผลการทดสอบของผู้ทดสอบนี้');
+    } catch (err) {
+      console.error('Error opening results from done screen:', err);
+      // Fallback switch directly to results screen
+      switchScreen(screenResults);
+    }
+  }
+
   function handleNextParticipant() {
     const nextId = getNextParticipantId(currentParticipantName);
     currentParticipantName = nextId;
@@ -980,6 +1058,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     preSessionResponses = [];
     preSessionStats = null;
+    postSessionResponses = [];
+    postSessionStats = null;
     userResponses = [];
     currentTrialIndex = 0;
 
@@ -1984,102 +2064,152 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
+  // --- TOAST NOTIFICATION UTILITY ---
+  function showToast(message, type = 'success') {
+    let toast = document.getElementById('app-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'app-toast';
+      document.body.appendChild(toast);
+    }
+    const icon = type === 'success' 
+      ? '<i class="fa-solid fa-circle-check" style="color: #10b981;"></i>' 
+      : '<i class="fa-solid fa-circle-exclamation" style="color: #ef4444;"></i>';
+    toast.innerHTML = `${icon} <span>${message}</span>`;
+    toast.className = `app-toast active ${type}`;
+    setTimeout(() => {
+      toast.classList.remove('active');
+    }, 3200);
+  }
+
   // --- DOWNLOAD CURRENT PARTICIPANT CSV (SUMMARY + RAW TRIALS) ---
   function downloadCurrentParticipantCSV() {
-    const pName = currentParticipantName || 'Participant';
-    const camp = currentCampName || '-';
-    const nowStr = getFormattedDate();
-    const mode = selectedConditionMode || 'ALL_MIXED';
+    try {
+      const pName = currentParticipantName || 'Participant';
+      const camp = currentCampName || '-';
+      const nowStr = getFormattedDate();
+      const mode = selectedConditionMode || 'ALL_MIXED';
 
-    let allTrials = [];
-    if (preSessionResponses && preSessionResponses.length > 0) {
-      preSessionResponses.forEach(r => {
-        allTrials.push({ ...r, phaseLabel: 'Pre-test' });
-      });
-    }
-    if (postSessionResponses && postSessionResponses.length > 0) {
-      postSessionResponses.forEach(r => {
-        allTrials.push({ ...r, phaseLabel: isAutoPrePostMode ? 'Post-test' : (currentSessionPhase === 'POST' ? 'Post-test' : 'Pre-test') });
-      });
-    }
-    if (allTrials.length === 0 && userResponses && userResponses.length > 0) {
-      userResponses.forEach(r => {
-        allTrials.push({ ...r, phaseLabel: currentSessionPhase === 'POST' ? 'Post-test' : 'Pre-test' });
-      });
-    }
+      let allTrials = [];
 
-    if (allTrials.length === 0) {
-      // Fallback: Check if we have individual sessions in storage
-      const sessions = getIndividualSessions();
-      const mySessions = sessions.filter(s => s.participantName === pName);
-      if (mySessions.length > 0) {
-        mySessions.forEach(s => {
-          (s.responses || []).forEach(r => {
-            allTrials.push({ ...r, phaseLabel: s.phaseLabel || (s.sessionPhase === 'POST' ? 'Post-test' : 'Pre-test') });
-          });
+      // 1. Check preSessionResponses
+      if (Array.isArray(preSessionResponses) && preSessionResponses.length > 0) {
+        preSessionResponses.forEach(r => {
+          allTrials.push({ ...r, phaseLabel: 'Pre-test' });
         });
       }
-    }
 
-    if (allTrials.length === 0) {
-      alert('ยังไม่มีข้อมูลการทดสอบสำหรับดาวน์โหลด');
-      return;
-    }
-
-    let csvContent = '\uFEFF';
-    // 1. Participant & Test Info Header
-    csvContent += `รหัสผู้ทดสอบ (Participant),${pName}\n`;
-    csvContent += `กลุ่ม/ค่าย (Camp),${camp}\n`;
-    csvContent += `รูปแบบ (Mode),${mode}\n`;
-    csvContent += `วันที่และเวลา (Date/Time),${nowStr}\n\n`;
-
-    // 2. Summary of Pre / Post (if available)
-    if (preSessionStats || postSessionStats) {
-      csvContent += '=== สรุปผลภาพรวม (Summary) ===\n';
-      csvContent += 'รอบ (Phase),Congruent (ms),Incongruent (ms),ผลต่าง D = I - C (ms),ความถูกต้อง (%),จำนวนข้อที่ถูก\n';
-      if (preSessionStats) {
-        csvContent += `Pre-test,${preSessionStats.congAvgMs},${preSessionStats.incongAvgMs},${preSessionStats.diffD},${preSessionStats.accuracyPct}%,${preSessionStats.correctCount}/${preSessionStats.totalCount}\n`;
+      // 2. Check postSessionResponses
+      if (Array.isArray(postSessionResponses) && postSessionResponses.length > 0) {
+        postSessionResponses.forEach(r => {
+          allTrials.push({ ...r, phaseLabel: isAutoPrePostMode ? 'Post-test' : (currentSessionPhase === 'POST' ? 'Post-test' : 'Pre-test') });
+        });
       }
-      if (postSessionStats) {
-        csvContent += `Post-test,${postSessionStats.congAvgMs},${postSessionStats.incongAvgMs},${postSessionStats.diffD},${postSessionStats.accuracyPct}%,${postSessionStats.correctCount}/${postSessionStats.totalCount}\n`;
+
+      // 3. Check current userResponses
+      if (allTrials.length === 0 && Array.isArray(userResponses) && userResponses.length > 0) {
+        userResponses.forEach(r => {
+          allTrials.push({ ...r, phaseLabel: currentSessionPhase === 'POST' ? 'Post-test' : 'Pre-test' });
+        });
       }
-      if (preSessionStats && postSessionStats) {
-        const delta = postSessionStats.diffD - preSessionStats.diffD;
-        csvContent += `การเปลี่ยนแปลง (Delta D),,,,${delta > 0 ? '+' : ''}${delta} ms,\n`;
+
+      // 4. Check currentSessionData
+      if (allTrials.length === 0 && currentSessionData && Array.isArray(currentSessionData.responses) && currentSessionData.responses.length > 0) {
+        currentSessionData.responses.forEach(r => {
+          allTrials.push({ ...r, phaseLabel: currentSessionData.phaseLabel || 'Session' });
+        });
       }
-      csvContent += '\n';
+
+      // 5. Fallback: Search from localStorage individual sessions
+      if (allTrials.length === 0) {
+        const sessions = getIndividualSessions();
+        const mySessions = sessions.filter(s => s.participantName === pName);
+        if (mySessions.length > 0) {
+          mySessions.forEach(s => {
+            (s.responses || []).forEach(r => {
+              allTrials.push({ ...r, phaseLabel: s.phaseLabel || (s.sessionPhase === 'POST' ? 'Post-test' : 'Pre-test') });
+            });
+          });
+        }
+      }
+
+      // 6. Fallback: Search from localStorage research records
+      if (allTrials.length === 0) {
+        const records = getResearchRecords();
+        const myRecord = [...records].reverse().find(r => r.participantName === pName);
+        if (myRecord) {
+          if (Array.isArray(myRecord.preResponses)) {
+            myRecord.preResponses.forEach(r => allTrials.push({ ...r, phaseLabel: 'Pre-test' }));
+          }
+          if (Array.isArray(myRecord.postResponses)) {
+            myRecord.postResponses.forEach(r => allTrials.push({ ...r, phaseLabel: 'Post-test' }));
+          }
+        }
+      }
+
+      if (allTrials.length === 0) {
+        showToast('ยังไม่มีข้อมูลการทดสอบสำหรับดาวน์โหลด', 'error');
+        return;
+      }
+
+      let csvContent = '\uFEFF';
+      // 1. Participant & Test Info Header
+      csvContent += `รหัสผู้ทดสอบ (Participant),${pName}\n`;
+      csvContent += `กลุ่ม/ค่าย (Camp),${camp}\n`;
+      csvContent += `รูปแบบ (Mode),${mode}\n`;
+      csvContent += `วันที่และเวลา (Date/Time),${nowStr}\n\n`;
+
+      // 2. Summary of Pre / Post (if available)
+      if (preSessionStats || postSessionStats) {
+        csvContent += '=== สรุปผลภาพรวม (Summary) ===\n';
+        csvContent += 'รอบ (Phase),Congruent (ms),Incongruent (ms),ผลต่าง D = I - C (ms),ความถูกต้อง (%),จำนวนข้อที่ถูก\n';
+        if (preSessionStats) {
+          csvContent += `Pre-test,${preSessionStats.congAvgMs},${preSessionStats.incongAvgMs},${preSessionStats.diffD},${preSessionStats.accuracyPct}%,${preSessionStats.correctCount}/${preSessionStats.totalCount}\n`;
+        }
+        if (postSessionStats) {
+          csvContent += `Post-test,${postSessionStats.congAvgMs},${postSessionStats.incongAvgMs},${postSessionStats.diffD},${postSessionStats.accuracyPct}%,${postSessionStats.correctCount}/${postSessionStats.totalCount}\n`;
+        }
+        if (preSessionStats && postSessionStats) {
+          const delta = postSessionStats.diffD - preSessionStats.diffD;
+          csvContent += `การเปลี่ยนแปลง (Delta D),,,,${delta > 0 ? '+' : ''}${delta} ms,\n`;
+        }
+        csvContent += '\n';
+      }
+
+      // 3. Raw Trial-by-Trial Data
+      csvContent += '=== ข้อมูลรายข้อ (Raw Trials) ===\n';
+      csvContent += 'Trial,Participant,Phase,Condition,Prompt Text,Ink Color,User Answer,Correct Answer,Status,Reaction Time (s),Reaction Time (ms),Is Congruent\n';
+
+      allTrials.forEach((t, idx) => {
+        const statusStr = t.isTimeout ? 'Timeout' : (t.isCorrect ? 'Correct' : 'Incorrect');
+        const rtSec = t.reactionTimeSec !== undefined ? Number(t.reactionTimeSec).toFixed(3) : (t.rtSec !== undefined ? Number(t.rtSec).toFixed(3) : '');
+        const rtMs = t.reactionTimeMs !== undefined ? Math.round(t.reactionTimeMs) : (t.rtMs !== undefined ? t.rtMs : '');
+        const congStr = t.isCongruent ? 'Yes' : 'No';
+
+        csvContent += [
+          idx + 1,
+          `"${pName}"`,
+          `"${t.phaseLabel || ''}"`,
+          `"${t.condCode || ''}"`,
+          `"${t.promptText || ''}"`,
+          `"${t.inkColorKey || t.inkColor || ''}"`,
+          `"${(t.userAnswerText || t.userAnswer || '').replace(/"/g, '""')}"`,
+          `"${(t.correctAnswerText || t.correctAnswer || '').replace(/"/g, '""')}"`,
+          statusStr,
+          rtSec,
+          rtMs,
+          congStr
+        ].join(',') + '\n';
+      });
+
+      const safeDate = new Date().toISOString().slice(0, 10);
+      const fileName = `Stroop_${pName}_${safeDate}_Results.csv`;
+      downloadFile(csvContent, fileName, 'text/csv;charset=utf-8;');
+      showToast('ดาวน์โหลดไฟล์ CSV ผลการทดสอบสำเร็จแล้ว!', 'success');
+    } catch (err) {
+      console.error('Download CSV error:', err);
+      alert('เกิดข้อผิดพลาดในการดาวน์โหลด CSV: ' + err.message);
     }
-
-    // 3. Raw Trial-by-Trial Data
-    csvContent += '=== ข้อมูลรายข้อ (Raw Trials) ===\n';
-    csvContent += 'Trial,Participant,Phase,Condition,Prompt Text,Ink Color,User Answer,Correct Answer,Status,Reaction Time (s),Reaction Time (ms),Is Congruent\n';
-
-    allTrials.forEach((t, idx) => {
-      const statusStr = t.isTimeout ? 'Timeout' : (t.isCorrect ? 'Correct' : 'Incorrect');
-      const rtSec = t.reactionTimeSec !== undefined ? Number(t.reactionTimeSec).toFixed(3) : (t.rtSec !== undefined ? Number(t.rtSec).toFixed(3) : '');
-      const rtMs = t.reactionTimeMs !== undefined ? Math.round(t.reactionTimeMs) : (t.rtMs !== undefined ? t.rtMs : '');
-      const congStr = t.isCongruent ? 'Yes' : 'No';
-
-      csvContent += [
-        idx + 1,
-        `"${pName}"`,
-        `"${t.phaseLabel || ''}"`,
-        `"${t.condCode || ''}"`,
-        `"${t.promptText || ''}"`,
-        `"${t.inkColorKey || t.inkColor || ''}"`,
-        `"${(t.userAnswerText || t.userAnswer || '').replace(/"/g, '""')}"`,
-        `"${(t.correctAnswerText || t.correctAnswer || '').replace(/"/g, '""')}"`,
-        statusStr,
-        rtSec,
-        rtMs,
-        congStr
-      ].join(',') + '\n';
-    });
-
-    const safeDate = new Date().toISOString().slice(0, 10);
-    const fileName = `Stroop_${pName}_${safeDate}_Results.csv`;
-    downloadFile(csvContent, fileName, 'text/csv;charset=utf-8;');
-    showToast('ดาวน์โหลดไฟล์ CSV เรียบร้อยแล้ว!');
   }
 
   function exportSingleSessionResearchCSV(data) {

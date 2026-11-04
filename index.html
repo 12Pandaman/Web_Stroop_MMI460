@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 
 <head>
@@ -319,6 +319,9 @@
         </div>
 
         <div class="done-actions-row">
+          <button type="button" id="btn-done-view-results" class="glass-btn info lg">
+            <i class="fa-solid fa-chart-pie"></i> ดูผลการทดสอบโดยละเอียด (View Results)
+          </button>
           <button type="button" id="btn-done-download-csv" class="glass-btn success lg">
             <i class="fa-solid fa-file-arrow-down"></i> ดาวน์โหลดผลการทดสอบนี้ (CSV)
           </button>
@@ -345,6 +348,9 @@
             <p>ผู้เข้าร่วม: <strong id="res-participant-name">--</strong> | <span id="res-camp-info">ค่าย/กลุ่ม: <strong id="res-camp-name">--</strong> | </span>รอบการทดสอบ: <span id="res-session-name" class="highlight">--</span> | วันที่: <span id="res-date-time">--</span></p>
           </div>
           <div class="results-actions">
+            <button id="btn-back-to-done" class="glass-btn secondary sm" title="ย้อนกลับไปหน้าเสร็จสิ้นการทดสอบ">
+              <i class="fa-solid fa-arrow-left"></i> ย้อนกลับ
+            </button>
             <button id="btn-export-research-csv" class="glass-btn primary sm" title="ส่งออกตารางสรุปผลวิจัยเป็นไฟล์ Sheet เดียว (มีทั้ง Pre, Post, และผลต่าง D)">
               <i class="fa-solid fa-file-excel"></i> ดาวน์โหลด Sheet สรุปผลวิจัย (ไฟล์เดียวจบ)
             </button>

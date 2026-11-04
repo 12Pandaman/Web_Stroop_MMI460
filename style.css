@@ -2225,3 +2225,56 @@ body[data-theme="light"] .countdown-big-num {
   box-shadow: 0 12px 30px -5px rgba(16, 185, 129, 0.7);
   background: linear-gradient(135deg, #059669, #047857);
 }
+
+.glass-btn.info {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 25px -5px rgba(2, 132, 199, 0.5);
+  font-weight: 700;
+}
+
+.glass-btn.info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -5px rgba(2, 132, 199, 0.7);
+  background: linear-gradient(135deg, #0369a1, #075985);
+}
+
+/* Toast Notifications */
+.app-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(15, 23, 42, 0.95);
+  color: #f8fafc;
+  padding: 0.85rem 1.75rem;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  z-index: 99999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-toast.active {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.app-toast.success {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 30px -5px rgba(16, 185, 129, 0.4);
+}
+
+.app-toast.error {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 10px 30px -5px rgba(239, 68, 68, 0.4);
+}
